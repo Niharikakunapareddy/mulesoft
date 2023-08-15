@@ -6,4 +6,7 @@
 http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
 	<flow name="objectsarraysFlow" doc:id="b8989471-100a-4619-9f2c-5624f505c0bd" >
 	</flow>
+
+
+	
 </mule>
