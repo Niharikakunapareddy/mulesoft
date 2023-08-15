@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:wsc="http://www.mulesoft.org/schema/mule/wsc" xmlns:batch="http://www.mulesoft.org/schema/mule/batch"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/batch http://www.mulesoft.org/schema/mule/batch/current/mule-batch.xsd
+http://www.mulesoft.org/schema/mule/wsc http://www.mulesoft.org/schema/mule/wsc/current/mule-wsc.xsd">
+	<wsc:config name="Web_Service_Consumer_Config" doc:name="Web Service Consumer Config" doc:id="56f8031c-c9cb-47bd-9e51-b2aad0bcd4e1" >
+		<wsc:connection wsdlLocation="products.wsdl" service="ProductServicePortService" port="ProductServicePortSoap11" address="http://localhost:6060/ws" >
+			<wsc:custom-transport-configuration >
+				<wsc:default-http-transport-configuration timeout="10000" />
+			</wsc:custom-transport-configuration>
+		</wsc:connection>
+	</wsc:config>
+	<db:config name="Database_Config2" doc:name="Database Config" doc:id="63559a44-9544-4247-a1c5-c328571161f9" >
+		<db:my-sql-connection host="localhost" port="3306" user="root" password="niharika" database="muletrainingdb" />
+	</db:config>
+	<flow name="batchprocessingFlow" doc:id="97b98ce8-238e-486b-b22a-2f74d3382fe8" initialState="stopped">
+		<file:listener doc:name="On New or Updated File" doc:id="13db9d8c-7b22-4e7c-85c4-afb644027937" config-ref="File_Config" directory="inputbatch" autoDelete="true">
+			<scheduling-strategy >
+				<fixed-frequency frequency="5" timeUnit="SECONDS"/>
+			</scheduling-strategy>
+		</file:listener>
+		<ee:transform doc:name="Transform Message" doc:id="ad035c80-9c9c-4162-adac-84eba825f1de" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+payload map {
+	productid: $.pid,
+	brandName: $.brand,
+	description: "some desc",
+	name: $.name,
+	offerPrice: $.price,
+	originalPrice: $.price
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<batch:job jobName="batchprocessingBatch_Job" doc:id="a347904a-4ed7-4d21-a71b-10b46ea7f390" maxFailedRecords="100">
+			<batch:process-records >
+				<batch:step name="step1" doc:id="2232e601-d7eb-4f43-882e-f51ba82bc53f" >
+					<batch:aggregator doc:name="Batch Aggregator" doc:id="553cbebb-df90-46fd-b27a-55f09fef90a1" size="10">
+						<logger level="INFO" doc:name="Logger" doc:id="8c14b99f-9026-47f0-b536-0c4d03505f1c" message="Inside Batch aggregator #[payload]"/>
+						<db:bulk-insert doc:name="Bulk insert" doc:id="900a14fb-8dde-43ac-ad81-0f3d5e73323a" config-ref="Database_Config2">
+			<db:bulk-input-parameters><![CDATA[#[payload map { 
+	bname: $.brand,
+	name: $.name,
+	desc: $.name,
+	offerprice: $.offerPrice,
+	originalprice: $.originalPrice,
+	offer_valid_until: now() as String
+}]]]></db:bulk-input-parameters>
+			<db:sql><![CDATA[insert into product(brand_name,name,description,offer_price,original_price,offer_valid_until) 
+values (:bname,:name,:desc,:offerprice,:originalprice,:offer_valid_until)]]></db:sql>
+		</db:bulk-insert>
+					</batch:aggregator>
+				</batch:step>
+				<batch:step name="step2" doc:id="3af9ee6d-7bd6-492a-a5d2-a5866f3b71c7" acceptExpression="#[payload.brandName != 'HP']" acceptPolicy="ONLY_FAILURES">
+					<logger level="INFO" doc:name="Logger" doc:id="afe80502-215c-464e-a397-e901d2e7f4dc" message="In step2 #[payload]"/>
+					<ee:transform doc:name="Transform Message" doc:id="5129d762-9646-49a7-8b67-5e85696c40f5">
+						<ee:message>
+							<ee:set-payload><![CDATA[%dw 2.0
+output application/xml
+ns ns0 http//way2learnonline.com/domain
+---
+{
+	ns0#addProductRequest: {
+		product: {
+			brandName: payload.brandName as String,
+			description: payload.description,
+			name: payload.name as String,
+			offer: {
+				offerPrice: payload.offerPrice as Number
+			},
+			originalPrice: payload.originalPrice as Number,
+			productId: payload.productid as Number
+		}
+	}
+}]]></ee:set-payload>
+						</ee:message>
+					</ee:transform>
+					<wsc:consume operation="addProduct" doc:name="Consume" doc:id="bc86aca3-e25b-4419-856f-fb417fc87628" config-ref="Web_Service_Consumer_Config"/>
+				</batch:step>
+			</batch:process-records>
+			<batch:on-complete >
+				<logger level="INFO" doc:name="Logger" doc:id="6be5b48f-4b3f-4d1f-924e-991b5171ed89" message="inside on compete"/>
+			</batch:on-complete>
+		</batch:job>
+	</flow>
+</mule>

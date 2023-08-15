@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:file="http://www.mulesoft.org/schema/mule/file"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+	<file:config name="File_Config" doc:name="File Config" doc:id="a1fec08b-7f6a-4ac2-b42f-32b550cd185a" >
+		<file:connection workingDir="c:\files" />
+	</file:config>
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="ca144f2f-2f66-4471-a145-7b152ca64506" >
+		<db:my-sql-connection host="localhost" port="3306" user="root" password="root" database="muletrainingdb" />
+	</db:config>
+	<db:config name="Database_Config1" doc:name="Database Config" doc:id="a657b13c-6591-4689-930d-e3323d3d734b" >
+		<db:my-sql-connection host="localhost" port="3306" user="root" password="niharika" database="muletrainingdb" />
+	</db:config>
+	<flow name="using-for-each" doc:id="d4f5921e-5005-483a-9e6c-130dd65d12eb" >
+		<file:listener doc:name="On New or Updated File" doc:id="50773799-71d2-455e-b222-e18fefb1af30" config-ref="File_Config" directory="C:\input" autoDelete="true">
+			<scheduling-strategy >
+				<fixed-frequency />
+			</scheduling-strategy>
+		</file:listener>
+		<ee:transform doc:name="Transform Message" doc:id="9dcffe2d-d48e-48f8-b967-f2ccd8475d90" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<set-variable value="#[[]]" doc:name="Set Variable" doc:id="2d89a7c7-9b88-493d-863b-f7eb71a1e863" variableName="products"/>
+		<foreach doc:name="For Each" doc:id="77de4410-f016-483e-be98-fe312eb1b930" >
+			<logger level="INFO" doc:name="Logger" doc:id="26c2b6be-a70f-469a-8435-f64ff9bdc068" message="#[payload]"/>
+			<ee:transform doc:name="Add Extra Fields to Payload" doc:id="83d06523-63d6-4a3f-a70a-1ec8c3d01158">
+				<ee:message>
+					<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+
+payload ++ {
+	offer_valid_until: now() as String,
+	offer_price: payload.price *0.75,
+	original_price: payload.price
+	
+}]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+			<ee:transform doc:name="Add product to vars" doc:id="859ff309-a623-46a3-a3b3-f74b2c3e6e06" >
+				<ee:message />
+				<ee:variables >
+					<ee:set-variable variableName="products" ><![CDATA[%dw 2.0
+output application/java
+---
+vars.products + payload]]></ee:set-variable>
+				</ee:variables>
+			</ee:transform>
+		</foreach>
+		<logger level="INFO" doc:name="Logger" doc:id="33cb1b43-d683-4e74-a843-9b9e6938b417" message="#[vars.products]"/>
+		<db:bulk-insert doc:name="Bulk insert" doc:id="8b2ebce1-6ec0-439d-b87a-de00978c62cb" config-ref="Database_Config1">
+			<db:bulk-input-parameters ><![CDATA[#[vars.products map {
+	pid: $.pid,
+	bname: $.brand,
+	name: $.name,
+	desc: $.name,
+	offerprice: $.offer_price,
+	originalprice: $.original_price,
+	offer_valid_until: $.offer_valid_until
+}]]]></db:bulk-input-parameters>
+			<db:sql ><![CDATA[insert into product(brand_name,name,description,offer_price,original_price,offer_valid_until) 
+values (:bname,:name,:desc,:offerprice,:originalprice,:offer_valid_until)]]></db:sql>
+		</db:bulk-insert>
+	</flow>
+</mule>

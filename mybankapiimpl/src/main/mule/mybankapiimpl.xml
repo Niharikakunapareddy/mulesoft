@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
+	<flow name="getcustomerbyid" doc:id="8a8cf5e4-fa2f-4893-9eb7-c5b4f9517046" >
+		<logger level="INFO" doc:name="Logger" doc:id="12cfa560-1999-4ada-908f-a9f0fd853838" message="inside getcustomerbyidflow"/>
+	</flow>
+</mule>

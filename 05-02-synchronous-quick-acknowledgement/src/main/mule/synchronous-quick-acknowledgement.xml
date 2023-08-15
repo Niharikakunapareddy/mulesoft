@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:jms="http://www.mulesoft.org/schema/mule/jms" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/current/mule-jms.xsd">
+	<db:config name="Database_Config1" doc:name="Database Config" doc:id="aed10ac6-a66b-4f49-b06a-a3e495b1d989" >
+		<db:my-sql-connection host="localhost" port="3306" user="root" password="niharika" database="muletrainingdb" />
+	</db:config>
+	<db:config name="Database_Config2" doc:name="Database Config" doc:id="87cf8a6b-01bd-467b-89b0-619b8dba17a5" >
+		<db:my-sql-connection host="localhost" port="3306" user="root" password="niharika" database="muletrainingdb" />
+	</db:config>
+	<db:config name="Database_Config3" doc:name="Database Config" doc:id="b677f7d8-46cd-4311-b144-f538e31df348" >
+		<db:my-sql-connection host="localhost" port="3306" user="root" password="niharika" database="muletrainingdb" />
+	</db:config>
+	<db:config name="Database_Config4" doc:name="Database Config" doc:id="ff994af0-2864-4bbd-8b3b-e970313af9fe" >
+		<db:my-sql-connection host="localhost" port="3306" user="root" password="niharika" database="muletrainingdb" />
+	</db:config>
+	<flow name="synchronous-quick-acknowledgementFlow1" doc:id="10e398a2-45ab-4fc8-bf6f-963040eab8d1" >
+		<jms:listener doc:name="On New Message" doc:id="6d1a7eb0-c5aa-4e12-8d28-8ae94917524a" destination="productqueue" ackMode="MANUAL" config-ref="JMS_Config">
+			<jms:consumer-type >
+				<jms:queue-consumer />
+			</jms:consumer-type>
+		</jms:listener>
+		<set-variable value="#[attributes.ackId]" doc:name="Set Variable" doc:id="0fa1e609-58e3-478f-b24c-dfcb1c5f2485" variableName="ackId"/>
+		<set-variable value="#[payload]" doc:name="Set Variable" doc:id="6d162f78-51d1-4c83-b338-26e5d737b27a" variableName="product"/>
+		<flow-ref doc:name="check-if-product-exists" doc:id="e748027f-2349-493e-bea1-19f6784677d3" name="check-if-product-exists"/>
+		<flow-ref doc:name="upsertproduct" doc:id="2359539a-3c12-4de5-8605-b5a20b4fa234" name="upsertproduct"/>
+		<ee:transform doc:name="Transform Message" doc:id="84fea8c6-6c3e-41a3-956a-aebeaef71290">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/xml
+ns ns0 http//way2learnonline.com/domain
+---
+{
+	ns0#addProductRequest: {
+		product: {
+			brandName: vars.product.brandName as String,
+			description: vars.product.description,
+			name: vars.product.name as String,
+			offer: {
+				offerPrice: vars.product.offerPrice as Number
+			},
+			originalPrice: vars.product.originalPrice as Number,
+			productId: vars.product.productid as Number
+		}
+	}
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<flow-ref doc:name="soap-service-addproduct" doc:id="6249f6ec-bf25-48ca-8795-3b9f6d25bc97" name="soap-service-addproduct"/>
+		<logger level="INFO" doc:name="add-delay-and-log" doc:id="4ff0bd53-f2b0-4962-8f7a-0161fa9d74cd" message="#[dw::Runtime::wait('added by calling soap',30000)]" />
+		<db:update doc:name="Update" doc:id="89d113bb-0d28-4400-aa2d-916541e40148" config-ref="Database_Config">
+			<db:sql ><![CDATA[update productprocessingstatus set status = :status where productid=:pid]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	pid: vars.product.productid,
+	status: "processed"
+}]]]></db:input-parameters>
+		</db:update>
+		<jms:ack doc:name="Ack" doc:id="e3eb4148-efb6-4ba5-afc1-def962de1b1f" ackId="#[vars.ackId]"/>
+	</flow>
+	<flow name="synchronous-quick-acknowledgementFlow" doc:id="89177b92-98e6-43a8-ad47-117329e191d6" >
+		<http:listener doc:name="Listener" doc:id="d573eba2-bd63-4353-be90-00b1ff8dd306" path="/addproduct" config-ref="HTTP_Listener_config"/>
+		<ee:transform doc:name="Create Product json" doc:id="e00759c3-d626-47dc-8419-b978aa9f4cb8">
+			<ee:message />
+			<ee:variables>
+				<ee:set-variable resource="product.dwl" variableName="product" />
+			</ee:variables>
+		</ee:transform>
+		<db:insert doc:name="Insert" doc:id="2ce74c20-b604-4658-a849-5604e182ac0a" config-ref="Database_Config2">
+			<db:sql ><![CDATA[insert into productprocessingstatus(productid,status) values(:pid,:status)]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	pid: vars.product.productid,
+	status: "processing"
+}]]]></db:input-parameters>
+		</db:insert>
+		<jms:publish doc:name="Publish" doc:id="8014b071-623f-4024-9fed-dab4ff8d359f" destination="productqueue" config-ref="JMS_Config">
+			<jms:message >
+				<jms:body ><![CDATA[#[vars.product]]]></jms:body>
+			</jms:message>
+		</jms:publish>
+		<ee:transform doc:name="Transform Message" doc:id="6d348051-49ea-4cd6-8648-4da15f31ae1a" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	statusCode: 200,
+	message: "success",
+	callbackURL: "http://localhost:8081/products/" ++ vars.product.productid as String,
+	time: now() 
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="synchronous-quick-acknowledgementFlow2" doc:id="16a48fa2-59d2-4764-ace3-bbcf012b63f0" >
+		<http:listener doc:name="Listener" doc:id="e26b8136-e26c-4743-abb4-f8e973b0e0fc" config-ref="HTTP_Listener_config" path="/products/{pid}"/>
+		<db:select doc:name="Select" doc:id="77f85387-581a-4a1e-81ba-e480a88eff62" config-ref="Database_Config4">
+			<db:sql ><![CDATA[select * from productprocessingstatus where productid = :pid]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	pid: attributes.uriParams.pid
+}]]]></db:input-parameters>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="d07d783e-f59d-4836-a67d-388b49ba254f" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+</mule>

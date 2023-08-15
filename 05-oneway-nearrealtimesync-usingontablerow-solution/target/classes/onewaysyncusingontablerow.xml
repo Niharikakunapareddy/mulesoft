@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<db:config name="db1" doc:name="Database Config" doc:id="9ca9b723-e317-43cf-881f-da663d4ce407" >
+		<db:my-sql-connection host="localhost" port="3306" user="root" password="niharika" database="db1" />
+	</db:config>
+	<db:config name="db2" doc:name="Database Config" doc:id="267f8123-2231-4876-a649-9d1a2ad4dbd7" >
+		<db:my-sql-connection host="localhost" port="3306" user="root" password="niharika" database="db2" />
+	</db:config> 
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="d890f322-8926-4101-a866-8b5f68ce05e6" >
+		<db:my-sql-connection host="localhost" port="3306" user="root" password="niharika" database="db1" />
+	</db:config>
+	<flow name="01-onewaysyncusingontablerowFlow" doc:id="ef3f857a-2efc-4675-aff5-93389b49c733" >
+		<db:listener doc:name="On Table Row" doc:id="5556354c-ac91-4501-9fbc-ba516579de1c" config-ref="Database_Config" table="product" watermarkColumn="product_id" idColumn="product_id">
+			<scheduling-strategy >
+				<fixed-frequency frequency="1" timeUnit="SECONDS"/>
+			</scheduling-strategy> 
+		</db:listener>
+		<ee:transform doc:name="Transform Message" doc:id="53943652-dbdd-47c7-bdd4-77fbf25abf07" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+{ 
+	bname:log('got a row with brand as', payload.brand_name),
+	name:payload.name,
+	offerprice: payload.offer_price,
+	originalprice: payload.original_price
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<db:insert doc:name="Insert" doc:id="d6f6b4c4-e1ff-475f-9c64-00866d628032" config-ref="db2">
+			<db:sql >INSERT INTO product(brand_name,name,offer_price,offer_valid_until,original_price)
+VALUES (:bname,:name ,:offerprice,now(),:originalprice)</db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	bname: payload.bname as String,
+	originalprice: payload.originalprice as Number,
+	name: payload.name as String,
+	offerprice: payload.offerprice as Number
+}]]]></db:input-parameters>
+		</db:insert>
+	</flow>
+</mule>

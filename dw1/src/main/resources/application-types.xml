@@ -1,0 +1,32 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<types:mule xmlns:types="http://www.mulesoft.org/schema/mule/types">
+  <types:catalog>
+    <types:type name="myproduct" format="json">
+      <types:shape format="weave" example="product.json"><![CDATA[%dw 2.0
+
+type myproduct = {|
+  productId: Number {"typeId": "int"}, 
+  name: String, 
+  description: String, 
+  originalPrice: Number {"typeId": "int"}, 
+  offer: {|
+    discountPercentage: Number {"typeId": "int"}, 
+    offerValidUntil: String
+  |}, 
+  brandName: String, 
+  images: Array<String>
+|} {"example": "{\\\"productId\\\":1,\\\"name\\\":\\\"Hp Pavilion laptop\\\",\\\"description\\\":\\\"Hp Laptop \\\",\\\"originalPrice\\\":1000,\\\"offer\\\":{\\\"discountPercentage\\\":25,\\\"offerValidUntil\\\":\\\"2019-06-29\\\"},\\\"brandName\\\":\\\"HP\\\",\\\"images\\\":[\\\"image1.jpeg\\\",\\\"image2.jpeg\\\",\\\"image3.jpeg\\\"]}"}
+
+]]></types:shape>
+    </types:type>
+  </types:catalog>
+  <types:enrichment select="#e695b0d0-d81b-4d06-9c66-49c32a15c57a">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="myproduct"/>
+        </types:message>
+      </types:input-event>
+    </types:processor-declaration>
+  </types:enrichment>
+</types:mule>

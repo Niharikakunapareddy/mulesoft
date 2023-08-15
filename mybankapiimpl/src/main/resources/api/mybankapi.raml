@@ -1,0 +1,119 @@
+#%RAML 1.0
+title: ACME Banking API
+mediaType: application/json
+
+
+traits:
+  cacheable: !include traits/cacheable.raml
+  pageable: !include traits/pageable.raml
+
+resourceTypes:
+   collection: !include resourceTypes/collection.raml
+   member: !include resourceTypes/member.raml
+
+types:
+  Customer: !include/exchange_modules/065ef05d-1425-46a1-8777-db6445f09537/mybankingdatatypes/1.0.0/datatypes/Customer.raml 
+  Account: !include datatypes/Account.raml
+  AccountOwner: !include datatypes/AccountOwner.raml
+  Address: !include datatypes/Address.raml
+  Bank: !include datatypes/Bank.raml
+  Money: !include datatypes/Money.raml
+  Transaction: !include datatypes/Transaction.raml
+  CustomErrorMessage: !include datatypes/CustomErrorMessage.raml
+
+/customers:
+  type: collection
+  get:
+    is: [cacheable,pageable]
+    headers: 
+      Accept?:
+    responses: 
+      200:
+        headers: 
+          Cache-Control:
+          Expires:
+            type: datetime
+        body:
+          application/json:
+            type: Customer[]
+          application/xml:
+            type: Customer[]
+      404:
+        body:
+          type: CustomErrorMessage
+      406:
+        body:
+          type: CustomErrorMessage
+  post:
+  /{customer_id}:
+    type: member
+    get:
+    patch:
+    delete:
+
+    /accounts:
+      get:
+        responses: 
+          200:
+            body:
+              type: Account[]
+          404:
+            body:
+              type: CustomErrorMessage
+
+/accounts:
+  type: collection
+  post:
+    
+  /{account_id}:
+    get:
+      responses: 
+        200:
+          body:
+            type: Account
+        404:
+          body:
+            type: CustomErrorMessage
+    put:
+      body:
+        type: Account
+      responses: 
+        200:
+          body:
+        201:
+          headers: 
+            Location:
+          body:
+        501:
+          body:
+            type: CustomErrorMessage
+    delete:
+      responses: 
+        200:
+          body:
+        404:
+          body:
+            type: CustomErrorMessage
+    /transactions:
+      get:
+        responses: 
+          200:
+            body:
+              type: Transaction[]
+          404:
+            body:
+              type: CustomErrorMessage
+
+/transactions:
+  type: collection
+  post:
+
+  /{transaction_id}:
+    get:
+      responses: 
+        200:
+          body:
+            type: Transaction
+        404:
+          body:
+            type: CustomErrorMessage

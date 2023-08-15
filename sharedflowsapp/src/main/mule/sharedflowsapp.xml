@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
+	<flow name="sharedflowsappFlow" doc:id="8dab9ee4-8139-46e1-a026-efc3a34c2334" >
+		<logger level="INFO" doc:name="Logger" doc:id="60e7c6a0-968a-49d5-8e60-de53672b89fb" message="inside shared flow================"/>
+	</flow>
+</mule>

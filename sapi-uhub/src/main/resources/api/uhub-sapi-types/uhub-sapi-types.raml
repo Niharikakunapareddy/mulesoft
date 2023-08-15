@@ -1,0 +1,221 @@
+#%RAML 1.0 Library
+usage:  Types for uho sapi
+types:
+  covid-case-request-type:
+    type: object
+    description: This type used to register and update covid case
+    properties:
+      source: 
+        type: string
+        required: true
+        minLength: 1
+        maxLength: 60
+        example: "The johns hopkins hospital"
+      caseType: 
+        type: string
+        required: true
+        minLength: 1
+        maxLength: 20
+        example: "positive"
+      firstName: 
+        type: string
+        required: true
+        minLength: 1
+        maxLength: 20
+        example: "John"
+      lastName: 
+        type: string
+        required: true
+        minLength: 1
+        maxLength: 20
+        example: "Nixon"
+      phone: 
+        type: string
+        required: true
+        minLength: 1
+        maxLength: 12
+      email: 
+        type: string
+        required: false
+        minLength: 1
+        maxLength: 50
+        example: "john@gmail.com"
+      dateOfBirth:
+        type: date-only
+        required: true
+        example: "1989-04-26"
+      nationalID: 
+        type: string
+        required: true
+        minLength: 1
+        maxLength: 20
+        example: "209-49-6193"
+      nationalIDType:
+        type: string
+        required: true
+        minLength: 1
+        maxLength: 20
+        example: "SSN"
+      address:
+        type: object
+        properties:
+          streetAddress: 
+            type: string
+            required: true
+            minLength: 1
+            maxLength: 30
+            example: "1600 Pennsylvania Avenue NW"
+          city: 
+            type: string
+            required: true
+            minLength: 1
+            maxLength: 30
+            example: "Washington"
+          state: 
+            type: string
+            required: true
+            minLength: 1
+            maxLength: 30
+            example: "DC"
+          postal: 
+            type: string
+            required: true
+            minLength: 1
+            maxLength: 30
+            example: "20500"
+          country: 
+            type: string
+            required: true
+            minLength: 1
+            maxLength: 30
+            example: "USA"
+  covid-case-response-type:
+    type: object
+    properties:
+      caseID: 
+        type: string      
+        example: "38774"
+  get-cases-by-national-id-response-type:
+    type: array
+    items:
+      type: object
+      description: Contains each case object
+      properties:
+        source: 
+          type: string
+          required: true
+          minLength: 1
+          maxLength: 60
+          example: "The johns hopkins hospital"
+        caseType: 
+          type: string
+          required: true
+          minLength: 1
+          maxLength: 20
+          example: "positive"
+        firstName: 
+          type: string
+          required: true
+          minLength: 1
+          maxLength: 20
+          example: "John"
+        lastName: 
+          type: string
+          required: true
+          minLength: 1
+          maxLength: 20
+          example: "Nixon"
+        phone: 
+          type: string
+          required: true
+          minLength: 1
+          maxLength: 12
+        email: 
+          type: string
+          required: false
+          minLength: 1
+          maxLength: 50
+          example: "john@gmail.com"
+        dateOfBirth:
+          type: date-only
+          required: true
+          example: "1989-04-26"
+        nationalID: 
+          type: string
+          required: true
+          minLength: 1
+          maxLength: 20
+          example: "209-49-6193"
+        nationalIDType:
+          type: string
+          required: true
+          minLength: 1
+          maxLength: 20
+          example: "SSN"
+        address:
+          type: object
+          properties:
+            streetAddress: 
+              type: string
+              required: true
+              minLength: 1
+              maxLength: 30
+              example: "1600 Pennsylvania Avenue NW"
+            city: 
+              type: string
+              required: true
+              minLength: 1
+              maxLength: 30
+              example: "Washington"
+            state: 
+              type: string
+              required: true
+              minLength: 1
+              maxLength: 30
+              example: "DC"
+            postal: 
+              type: string
+              required: true
+              minLength: 1
+              maxLength: 30
+              example: "20500"
+            country: 
+              type: string
+              required: true
+              minLength: 1
+              maxLength: 30
+              example: "USA"
+        createDate:
+          type: date-only
+          required: true
+          example: "2021-06-26"
+        updateDate:
+          type: date-only
+          required: true
+          example: "2021-06-26"
+  get-reports-response-type:
+    type: array
+    items:
+      type: object
+      properties:
+        state:
+          type: string
+          example: "texas"
+        report:
+          type: object
+          properties:
+            total:
+              type: number
+              example: 46744
+            positive:
+              type: number
+              example: 436744
+            recovered:
+              type: number
+              example: 433744
+            death:
+              type: number
+              example: 300
+            vaccinated:
+              type: number
+              example: 7847848

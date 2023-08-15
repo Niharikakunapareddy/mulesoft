@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<configuration-properties doc:name="Configuration properties" doc:id="d9bfd687-e540-4508-92c0-d3db38464622" file="application.yaml" />
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="aaeefaac-e074-44a1-bb7d-6717feab091f" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<flow name="getconvertedprice" doc:id="3148eb51-1f4f-4ed1-a951-55990c104ddc" >
+		<choice doc:name="Choice" doc:id="0c3ee917-d110-4acc-985a-3d687f8c222e" >
+			<when expression="#[payload == 'USD']">
+				<set-payload value="85" doc:name="Set Payload" doc:id="d667b6c9-1b28-4ab6-949a-220f2cf4ee95" />
+			</when>
+			<when expression="#[payload == 'EURO']">
+				<set-payload value="100" doc:name="Set Payload" doc:id="fcd0c70d-bf38-4866-923a-de375d75c5ab" />
+			</when>
+			<otherwise >
+				<set-payload value="Invalid Currency" doc:name="Set Payload" doc:id="3c7bc069-0055-4499-bfd9-90c957e25664" />
+			</otherwise>
+		</choice>
+	</flow>
+	<flow name="dwmiscellaneousFlow" doc:id="fbec81a2-fcff-4eb5-86f5-9d3aa01eb373" >
+		<http:listener doc:name="Listener" doc:id="83e94cf0-e087-406e-9c4b-749fb879275e" config-ref="HTTP_Listener_config" path="/test"/>
+		<ee:transform doc:name="Transform Message" doc:id="fa82018f-4852-4cd3-bfdc-c10b6aca7536" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+
+	joinBy(['aaa','bbb','cc'], "-")
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+</mule>

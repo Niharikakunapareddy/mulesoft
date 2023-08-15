@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="output_transform" doc:name="HTTP Listener config" doc:id="368b2a10-6a55-41fa-8f2a-9bd1f4261b8e" >
+		<http:listener-connection host="0.0.0.0" port="8083" />
+	</http:listener-config>
+	<flow name="output_transformFlow" doc:id="78202d26-852e-4e46-ba2a-f3ae37c8ce9e" >
+		<http:listener doc:name="Listener" doc:id="1d43ec28-d3ce-40c2-bd37-07a7da62ad89" config-ref="output_transform" path="/output"/>
+		<logger level="INFO" doc:name="Logger" doc:id="637cffac-8722-4d30-b04c-9513380a0db6" message="#[payload]"/>
+		<ee:transform doc:name="Transform Message" doc:id="cf0c27bd-4434-4af1-aa2c-38a55ca34706" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"name": attributes.queryParams.name,
+	"city":attributes.queryParams.city,
+	"district":"prakasam",
+	"state":"andhra pradesh"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="72396bbf-2be8-40e1-8400-d6e48806fd49" message="#[payload]"/>
+	</flow>
+</mule>

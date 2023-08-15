@@ -1,0 +1,4 @@
+%dw 2.0
+
+type auto_ec2a5125_4654_466c_82c7_493e0e13d0d6_Input_Attributes = Null
+

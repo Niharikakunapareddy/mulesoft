@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:validation="http://www.mulesoft.org/schema/mule/validation"
+	xmlns:bti="http://www.mulesoft.org/schema/mule/ee/bti"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/ee/bti http://www.mulesoft.org/schema/mule/ee/bti/current/mule-bti-ee.xsd
+http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd"> 
+	<db:config name="db1" doc:name="Database Config" doc:id="4eb14134-b0f0-4e46-9c78-1743da103405" >
+		<db:my-sql-connection host="localhost" port="3306" user="root" password="niharika" database="db1" useXaTransactions="true"/>
+	</db:config>
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="16e0f395-dd91-439c-b71a-81a59b14e372" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="32516d18-1996-4b42-880b-c732e6386fc6" >
+		<db:my-sql-connection host="localhost" port="3306" user="root" password="niharika" database="db1" />
+	</db:config>
+	<db:config name="Database_Config1" doc:name="Database Config" doc:id="db74f639-f45f-4f78-b975-1913416ba654" >
+		<db:my-sql-connection host="localhost" port="3306" user="root" password="niharika" database="muletrainingdb" />
+	</db:config>
+	<db:config name="Database_Config2" doc:name="Database Config" doc:id="cdbf5efd-5239-49e4-92b6-8cabe42c90f9" >
+		<db:my-sql-connection host="localhost" port="3306" user="root" password="niharika" database="muletrainingdb" />
+	</db:config>
+	<db:config name="Database_Config3" doc:name="Database Config" doc:id="b2c0ad94-f9d3-4a2a-b384-729b208d8e83" >
+		<db:my-sql-connection host="localhost" port="3306" user="root" password="niharika" database="db1" />
+	</db:config>
+	<db:config name="Database_Config4" doc:name="Database Config" doc:id="65899347-e8c5-4e95-afc3-c17149396a3b" >
+		<db:my-sql-connection host="localhost" port="3306" user="root" password="niharika" database="db1" />
+	</db:config>
+	<db:config name="Database_Config5" doc:name="Database Config" doc:id="c93bf642-3605-417d-929a-e78eed31c901" >
+		<db:my-sql-connection host="localhost" port="3306" user="root" password="niharika" database="db1" />
+	</db:config>
+	<db:config name="Database_Config6" doc:name="Database Config" doc:id="14aaa68b-9bc4-4b71-bff5-77f496cbd5e1" >
+		<db:my-sql-connection host="localhost" port="3306" user="root" password="niharika" database="db1" />
+	</db:config>
+	<db:config name="Database_Config7" doc:name="Database Config" doc:id="fe57d535-4b8f-4bbe-8fab-0e31d1a03bc1" >
+		<db:my-sql-connection host="localhost" port="3306" user="root" password="niharika" database="db1" />
+	</db:config>
+	<db:config name="Database_Config8" doc:name="Database Config" doc:id="72110bd3-82e4-40a0-a3c7-f309898278ff" >
+		<db:my-sql-connection host="localhost" port="3306" user="root" password="niharika" database="db1" />
+	</db:config>
+	<flow name="dbdemoFlow" doc:id="a0e257d9-355f-492f-b9f6-87944f0c132b" initialState="started">
+		<http:listener doc:name="Listener" doc:id="a69d709b-3398-400a-ace7-7d31d98babe2" config-ref="HTTP_Listener_config" path="/save"/>
+		<ee:transform doc:name="Transform Message" doc:id="a0c35e13-0500-4ada-a12c-de656015d650">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+product: {
+	
+	name: log("Got Name as ",attributes.queryParams.name),
+	brand_name: attributes.queryParams.brand_name,
+	originalPrice: attributes.queryParams.original_price
+}]]></ee:set-payload>
+			</ee:message>
+				<ee:variables>
+					<ee:set-variable variableName="bname"><![CDATA[%dw 2.0
+output application/java
+---
+attributes.queryParams.brand_name]]></ee:set-variable>
+				</ee:variables>
+		</ee:transform>
+		<try doc:name="Try" doc:id="6829bc44-0609-4be1-b30e-eec3f90d7051" transactionalAction="ALWAYS_BEGIN">
+			<db:insert doc:name="InserttoProduct" doc:id="5a86bd3e-9a40-4f40-abb4-ebc94bb245ef" config-ref="Database_Config7" target="insertresponse" queryTimeoutUnit="NANOSECONDS">
+			<db:sql><![CDATA[insert into product(brand_name,offer_price,original_price) values(:bname,:offerPrice,:originalPrice)]]></db:sql>
+			<db:input-parameters><![CDATA[#[{
+	bname: payload.product.brand_name,
+	offerPrice: payload.product.originalPrice,
+	originalPrice: payload.product.originalPrice,
+}]]]></db:input-parameters>
+		</db:insert>
+			<db:insert doc:name="Inserttocopyproduct" doc:id="a5736e3c-31b2-4202-9fa3-361ad9ead688" config-ref="Database_Config8">
+				<db:sql><![CDATA[insert into copyproduct(brand_name,offer_price,original_price) values(:bname,:offerPrice,:originalPrice)]]></db:sql>
+				<db:input-parameters><![CDATA[#[{
+	bname: payload.product.brand_name,
+	offerPrice: payload.product.originalPrice,
+	originalPrice: payload.product.originalPrice,
+}]]]></db:input-parameters>
+			</db:insert>
+			<ee:transform doc:name="Transform Message" doc:id="a45bc8f4-b7ba-4962-9787-f65c55c1890c">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/java
+---
+if(vars.bname=='Samsung')
+ dw::Runtime::fail("We dont Accept Samsung")
+else 
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+			<set-payload value="#['Inserted Successfully']" doc:name="Set Payload" doc:id="59f97c74-f836-4bf2-ac3d-00e4bb8e93ef" />
+		</try>
+	</flow>
+</mule>

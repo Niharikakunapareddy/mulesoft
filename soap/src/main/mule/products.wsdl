@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><wsdl:definitions xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:sch="http//way2learnonline.com/domain" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:tns="http//way2learnonline.com/productservice" targetNamespace="http//way2learnonline.com/productservice">
+  <wsdl:types>
+    <xs:schema xmlns:tns="http//way2learnonline.com/domain" xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="http//way2learnonline.com/domain" version="1.0">
+
+
+ 
+ <xs:element name="getAllProductsRequest">
+        <xs:complexType>
+            <xs:sequence/>                
+        </xs:complexType>
+    </xs:element>
+    
+     <xs:element name="getAllProductsResponse">
+        <xs:complexType>
+        	<xs:sequence>
+        		 <xs:element name="products">
+        		 	 <xs:complexType>
+				  		<xs:sequence>
+				  			<xs:element maxOccurs="unbounded" minOccurs="1" name="product" type="tns:product"/>
+				  		</xs:sequence>
+				  </xs:complexType>
+        		 </xs:element>
+        	</xs:sequence>                         
+        </xs:complexType>
+    </xs:element>
+    
+    
+    
+     <xs:element name="getProductsByNameRequest">
+        <xs:complexType>
+            <xs:sequence>
+            	<xs:element name="name" type="xs:string"/>
+            </xs:sequence>                
+        </xs:complexType>
+    </xs:element>
+    
+     <xs:element name="getProductsByNameResponse">
+         <xs:complexType>
+        	<xs:sequence>
+        		 <xs:element name="products">
+        		 	 <xs:complexType>
+				  		<xs:sequence>
+				  			<xs:element maxOccurs="unbounded" minOccurs="1" name="product" type="tns:product"/>
+				  		</xs:sequence>
+				  </xs:complexType>
+        		 </xs:element>
+        	</xs:sequence>                         
+        </xs:complexType>
+    </xs:element>
+    
+    <xs:element name="addProductRequest">
+         <xs:complexType>
+        	<xs:sequence>
+        		 <xs:element name="product" type="tns:product"/>
+        	</xs:sequence>                         
+        </xs:complexType>
+    </xs:element>
+    
+    <xs:element name="addProductResponse">
+         <xs:complexType>
+        	<xs:sequence>
+        		 <xs:element name="product" type="tns:product"/>
+        	</xs:sequence>                         
+        </xs:complexType>
+    </xs:element>
+
+
+
+  <xs:complexType name="offer">
+    <xs:sequence>
+      <xs:element name="offerPrice" type="xs:double"/>
+      <xs:element minOccurs="0" name="offerValidUntil" type="xs:date"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="product">
+    <xs:sequence>
+      <xs:element minOccurs="0" name="brandName" type="xs:string"/>
+      <xs:element minOccurs="0" name="description" type="xs:string"/>
+     <xs:element name="images">
+        		<xs:complexType>
+					<xs:sequence>
+						<xs:element maxOccurs="unbounded" minOccurs="0" name="image" type="xs:string"/>
+					</xs:sequence>
+				 </xs:complexType>
+         </xs:element>
+  
+      <xs:element minOccurs="0" name="name" type="xs:string"/>
+      <xs:element minOccurs="0" name="offer" type="tns:offer"/>
+      <xs:element name="originalPrice" type="xs:double"/>
+      <xs:element minOccurs="0" name="productId" type="xs:long"/>
+    </xs:sequence>
+  </xs:complexType>
+  
+  		 
+ 
+</xs:schema>
+  </wsdl:types>
+  <wsdl:message name="getAllProductsRequest">
+    <wsdl:part element="sch:getAllProductsRequest" name="getAllProductsRequest">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="getAllProductsResponse">
+    <wsdl:part element="sch:getAllProductsResponse" name="getAllProductsResponse">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="addProductRequest">
+    <wsdl:part element="sch:addProductRequest" name="addProductRequest">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="addProductResponse">
+    <wsdl:part element="sch:addProductResponse" name="addProductResponse">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="getProductsByNameResponse">
+    <wsdl:part element="sch:getProductsByNameResponse" name="getProductsByNameResponse">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="getProductsByNameRequest">
+    <wsdl:part element="sch:getProductsByNameRequest" name="getProductsByNameRequest">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:portType name="ProductServicePort">
+    <wsdl:operation name="getAllProducts">
+      <wsdl:input message="tns:getAllProductsRequest" name="getAllProductsRequest">
+    </wsdl:input>
+      <wsdl:output message="tns:getAllProductsResponse" name="getAllProductsResponse">
+    </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="addProduct">
+      <wsdl:input message="tns:addProductRequest" name="addProductRequest">
+    </wsdl:input>
+      <wsdl:output message="tns:addProductResponse" name="addProductResponse">
+    </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="getProductsByName">
+      <wsdl:input message="tns:getProductsByNameRequest" name="getProductsByNameRequest">
+    </wsdl:input>
+      <wsdl:output message="tns:getProductsByNameResponse" name="getProductsByNameResponse">
+    </wsdl:output>
+    </wsdl:operation>
+  </wsdl:portType>
+  <wsdl:binding name="ProductServicePortSoap11" type="tns:ProductServicePort">
+    <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+    <wsdl:operation name="getAllProducts">
+      <soap:operation soapAction=""/>
+      <wsdl:input name="getAllProductsRequest">
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output name="getAllProductsResponse">
+        <soap:body use="literal"/>
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="addProduct">
+      <soap:operation soapAction=""/>
+      <wsdl:input name="addProductRequest">
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output name="addProductResponse">
+        <soap:body use="literal"/>
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="getProductsByName">
+      <soap:operation soapAction=""/>
+      <wsdl:input name="getProductsByNameRequest">
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output name="getProductsByNameResponse">
+        <soap:body use="literal"/>
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:service name="ProductServicePortService">
+    <wsdl:port binding="tns:ProductServicePortSoap11" name="ProductServicePortSoap11">
+      <soap:address location="http://localhost:6060/ws"/>
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>

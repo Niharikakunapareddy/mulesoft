@@ -1,0 +1,38 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<types:mule xmlns:types="http://www.mulesoft.org/schema/mule/types">
+  <types:catalog>
+    <types:type name="productsXml" format="xml">
+      <types:example format="xml" element="{http://way2learnonline.com/domain}products" location="examples/products.xml"/>
+    </types:type>
+    <types:type name="productxmlwithns" format="xml">
+      <types:example format="xml" element="{http://way2learnonline.com/domain}products" location="examples/productswithns.xml"/>
+    </types:type>
+  </types:catalog>
+  <types:enrichment select="#2629019f-ba7d-43bc-a1cd-03d2b3dee091">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="productsXml"/>
+        </types:message>
+      </types:input-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#130f0027-1a8b-4877-a0a7-d4bed6481c75">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="productsXml"/>
+        </types:message>
+      </types:input-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#9f9bcf40-b60c-4715-94e9-cbaf198e913b">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="productxmlwithns"/>
+        </types:message>
+      </types:input-event>
+    </types:processor-declaration>
+  </types:enrichment>
+</types:mule>

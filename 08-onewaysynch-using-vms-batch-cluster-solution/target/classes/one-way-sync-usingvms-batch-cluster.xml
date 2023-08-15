@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:vm="http://www.mulesoft.org/schema/mule/vm"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:batch="http://www.mulesoft.org/schema/mule/batch" xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:os="http://www.mulesoft.org/schema/mule/os" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/batch http://www.mulesoft.org/schema/mule/batch/current/mule-batch.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/vm http://www.mulesoft.org/schema/mule/vm/current/mule-vm.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<vm:config name="VM_Config" doc:name="VM Config" doc:id="730191cb-6103-4fd5-acf9-ca34250017ee" >
+		<vm:connection />
+		<vm:queues >  
+			<vm:queue queueName="productsq" queueType="PERSISTENT" />
+		</vm:queues>
+	</vm:config>
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="c174315a-0259-492a-acb5-55f112ed847d" >
+		<http:listener-connection host="0.0.0.0" port="${http.port}" />
+	</http:listener-config>
+	<configuration-properties doc:name="Configuration properties" doc:id="2d113bfa-f3d7-4cfd-8caf-35477f7f7889" file="${servername}.yaml" />
+	<db:config name="db1" doc:name="Database Config" doc:id="042279c0-ca5f-43eb-b9ad-f4a6023bda31" >
+		<db:my-sql-connection host="localhost" port="3306" user="root" password="root" database="db1" />
+	</db:config>
+	<db:config name="db2" doc:name="Database Config" doc:id="36cf7b26-febc-4d9f-803a-c4340812f269" >
+		<db:my-sql-connection host="localhost" port="3306" user="root" password="root" database="db2" />
+	</db:config>
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="88324a47-5288-4de0-83d9-6373140d9e97" >
+		<db:my-sql-connection host="localhost" port="3306" user="root" password="niharika" database="db2" />
+	</db:config>
+	<db:config name="Database_Config1" doc:name="Database Config" doc:id="bc87c1ef-d3ef-4f9f-b09e-dac7dc26f9b8" >
+		<db:my-sql-connection host="localhost" port="3306" user="root" password="niharika" database="db1" />
+	</db:config>
+	<db:config name="Database_Config2" doc:name="Database Config" doc:id="aacd898e-2f70-475b-9ca3-9a562d336874" >
+		<db:my-sql-connection host="localhost" port="3306" user="root" password="niharika" database="muletrainingdb" />
+	</db:config>
+	<flow name="04-usingvmsFlow" doc:id="32399cd6-733b-4a88-8d9f-2027baf5c245" initialState="started">
+		<vm:listener queueName="productsq" doc:name="Listener-on-products-vmq" doc:id="b8b2712b-024c-4dbc-b5bd-85a80ff6461e" config-ref="VM_Config" timeout="5000" timeoutUnit="MILLISECONDS"/>
+		<logger level="INFO" doc:name="Logger" doc:id="3c99ce5c-b4ce-49fd-80c4-e763c8bbf0a8" message="Starting job with #[sizeOf(payload)] records"/>
+		<batch:job jobName="using-batchBatch_Jobinvmflow" doc:id="27cda227-8d34-4eed-816d-7945b61e8b15" blockSize="20" maxConcurrency="200">
+			<batch:process-records>
+				<batch:step name="step1" doc:id="36734efb-83bb-40ac-af86-8cb36fcc52d0">
+					<ee:transform doc:name="Transform Message" doc:id="94f99f87-0bfe-4fe4-b39f-f8850f3e1b57">
+						<ee:message>
+							<ee:set-payload><![CDATA[%dw 2.0
+output application/java
+---
+{ 
+	bname:payload.brand_name, 
+	name:payload.name,
+	offerprice: payload.offer_price,
+	originalprice: payload.original_price
+}]]></ee:set-payload>
+						</ee:message>
+					</ee:transform>
+					<batch:aggregator doc:name="Batch Aggregator" doc:id="8570dc86-d855-4bd9-b1af-fd0fc135131b" size="20">
+						<logger level="INFO" doc:name="Logger" doc:id="8211da08-a6ff-49e1-abfe-407964a61530" message="#['Inside Batch Aggregator size of payload ' ++ sizeOf(payload) as String]" />
+						<db:bulk-insert doc:name="Bulk insert-Into db2" doc:id="9c56d7b6-504c-4d1f-b25e-657633cacb9f" config-ref="Database_Config2">
+							<db:bulk-input-parameters><![CDATA[#[%dw 2.0
+output application/java
+---
+payload map {
+	bname: $.bname as String,
+	originalprice: $.originalprice as Number,
+	name: $.name as String,
+	offerprice: $.offerprice as Number
+}]]]></db:bulk-input-parameters>
+							<db:sql><![CDATA[INSERT INTO product(brand_name,name,offer_price,offer_valid_until,original_price)
+VALUES (:bname,:name ,:offerprice,now(),:originalprice)]]></db:sql>
+						</db:bulk-insert>
+					</batch:aggregator>
+				</batch:step>
+			</batch:process-records>
+			<batch:on-complete>
+				<logger level="INFO" doc:name="Logger" doc:id="2446ee61-45da-4a26-b0da-fcce2217584f" message="Batch Completed" />
+			</batch:on-complete>
+		</batch:job>
+	</flow>
+	<flow name="03-using-vmsFlow" doc:id="dca11a43-10ff-4d82-b25b-16ba13a80d80" initialState="started">
+		<http:listener doc:name="Listener" doc:id="d3bf25cf-356b-4fa2-8a39-9a2a094344da" config-ref="HTTP_Listener_config" path="/start"/>
+		<os:retrieve doc:name="Retrieve-from-objectstore" doc:id="f917a056-ff65-4cc0-a7a1-357e77823473" key="lastupdatedtime" target="lastupdatedtime">
+			<os:default-value ><![CDATA[#['1900-04-10' as Date]]]></os:default-value>
+		</os:retrieve>
+		<db:select doc:name="Select-from-db1" doc:id="0fcf5c24-c8e4-4d4f-bae2-8cbe169fe7fc" config-ref="Database_Config1">
+			<db:sql ><![CDATA[select * from product where offer_valid_until >:lastpolltime]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	lastpolltime: vars.lastupdatedtime
+}]]]></db:input-parameters>
+		</db:select>
+		<foreach doc:name="For Each" doc:id="0f60d760-d546-49a4-9db9-5a23fe65b3e9" batchSize="200">
+			<vm:publish doc:name="Publish-to-productsq" doc:id="35f8ed81-63d3-40f3-b0c0-412227565f71" config-ref="VM_Config" queueName="productsq"/>
+		</foreach>
+		<os:store doc:name="Store Into Object Store" doc:id="ec72d049-11e0-42ad-91d3-f71494a34ec1" key="lastupdatedtime">
+			<os:value><![CDATA[#[now()]]]></os:value>
+		</os:store>
+		<set-payload value="#['Handled Request Succesfully!!!']" doc:name="Set Payload" doc:id="a8bdd05d-0cbe-4ebf-8587-82335e8703a1" />
+	
+</flow>
+</mule>

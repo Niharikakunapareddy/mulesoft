@@ -1,0 +1,48 @@
+#%RAML 1.0 ResourceType
+get?:
+  description: Retrieve a/an <<resourcePathName | !singularize>> with a specific        <<resourcePathName | !singularize >>
+  displayName: Get a/an <<resourcePathName | !singularize>> by <<resourcePathName | !singularize>> ID
+  responses: 
+    200:
+      body:
+        application/json: 
+          type: <<resourcePathName | !singularize | !uppercamelcase>>
+    404:
+      body:
+        application/json:
+          type: !include ../datatypes/CustomErrorMessage.raml
+patch?:
+  description: Update a specific <<resourcePathName | !singularize>>  info 
+  displayName: Update a/an <<resourcePathName | !singularize>> by <<resourcePathName | !singularize>> ID
+  body:
+  responses: 
+    204:
+    501:
+      body:
+        application/json:
+          type: !include ../datatypes/CustomErrorMessage.raml
+delete?:
+  description: Delete a specific <<resourcePathName | !singularize>>
+  displayName: Delete a/an <<resourcePathName | !singularize>> by <<resourcePathName | !singularize>> ID
+  responses: 
+    200:
+      body:
+    404:
+      body:
+        application/json:
+          type: !include ../datatypes/CustomErrorMessage.raml
+put?:
+  body:
+    application/json:
+      type: <<resourcePathName | !singularize | !uppercamelcase>>
+  responses: 
+    200:
+      body:
+    201:
+      headers: 
+        Location:
+      body:
+    501:
+      body:
+        application/json:
+          type: !include ../datatypes/CustomErrorMessage.raml

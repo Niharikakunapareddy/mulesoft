@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:file="http://www.mulesoft.org/schema/mule/file"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<file:config name="File_Config" doc:name="File Config" doc:id="bde586c7-d5a7-4fc5-b0bf-224e91af360d" >
+		<file:connection workingDir="c:\files" />
+	</file:config>
+	<file:config name="File_Config1" doc:name="File Config" doc:id="1e970dd8-d8d2-47b2-b6d1-29662dcb93c2" >
+		<file:connection workingDir="c:\input" />
+	</file:config>
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="84cb093b-6825-45af-b775-20dfc33cffd4" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<flow name="fileFlow1" doc:id="8f708644-aecb-4fdc-a53e-93ead424e0c0" >
+		<http:listener doc:name="Listener" doc:id="07cb52d1-6d67-4d49-a1f2-f92c2fef218f" config-ref="HTTP_Listener_config" path="/addproduct"/>
+		<ee:transform doc:name="Transform Message" doc:id="add67b2b-2347-4a00-ba0b-1ed6343c1b95" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/csv header=false
+---
+[{
+	pid: attributes.queryParams.productid as Number,
+	name: attributes.queryParams.pname as String,
+	price: attributes.queryParams.price as Number
+}]]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<file:write doc:name="Write" doc:id="891c1993-3684-4d80-970e-82b1c96b028f" config-ref="File_Config1" path="write\products.csv" mode="APPEND"/>
+		<logger level="INFO" doc:name="Logger" doc:id="b9690163-1eb5-424c-bdef-b760007fd75a" />
+	</flow>
+	<flow name="fileFlow" doc:id="2c021036-3747-4c0f-a342-b1ffab0322f1" >
+		<file:listener doc:name="On New or Updated File" doc:id="dc9425e0-01f4-428a-aa83-f84bc7d66b32" config-ref="File_Config1" directory="input" watermarkMode="CREATED_TIMESTAMP">
+			<scheduling-strategy >
+				<fixed-frequency frequency="5" timeUnit="SECONDS" />
+			</scheduling-strategy>
+		</file:listener>
+		<ee:transform doc:name="Transform Message" doc:id="b40b7e86-bb2d-41fd-8025-41b0516da69d" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="e50dc622-ea91-4306-a520-8827ce68be19" message="#[payload]"/>
+	</flow>
+</mule>

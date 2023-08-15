@@ -1,0 +1,13 @@
+{
+  "sampleData": {
+    "d2a23db4-599b-4088-8dc1-7fb7d1352e75": {
+      "payload": "sample_data/products.xml"
+    },
+    "0558a6b4-ff20-4908-a167-eeb4950635e8": {
+      "payload": "sample_data/defaultstringtype.dwl"
+    },
+    "9df0ca1a-d38f-41b2-996b-af19e79b567f": {
+      "payload": "sample_data/products_1.xml"
+    }
+  }
+}

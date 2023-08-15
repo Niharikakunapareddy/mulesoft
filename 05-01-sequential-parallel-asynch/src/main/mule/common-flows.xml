@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:wsc="http://www.mulesoft.org/schema/mule/wsc"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/wsc http://www.mulesoft.org/schema/mule/wsc/current/mule-wsc.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+	<db:config name="Database_Config1" doc:name="Database Config" doc:id="fe71993b-0891-4a12-b041-0c0179ae389e" >
+		<db:my-sql-connection host="localhost" port="3306" user="root" password="niharika" database="muletrainingdb" />
+	</db:config>
+	<db:config name="Database_Config2" doc:name="Database Config" doc:id="6365c89e-f722-4048-92a0-a1872dccc9bf" >
+		<db:my-sql-connection host="localhost" port="3306" user="root" password="niharika" database="muletrainingdb" />
+	</db:config>
+	<db:config name="Database_Config3" doc:name="Database Config" doc:id="539bcf45-cdc1-4792-8ad2-8c56ef6acdf3" >
+		<db:my-sql-connection host="localhost" port="3306" user="root" password="niharika" database="muletrainingdb" />
+	</db:config>
+	<db:config name="Database_Config4" doc:name="Database Config" doc:id="f77557ae-4e44-4675-a708-275a3d4ed87a" >
+		<db:my-sql-connection host="localhost" port="3306" user="root" password="niharika" database="muletrainingdb" />
+	</db:config>
+	<db:config name="Database_Config5" doc:name="Database Config" doc:id="8da62ef1-daaf-457b-9a3b-d1eab7d871ed" >
+		<db:my-sql-connection host="localhost" port="3306" user="root" password="niharika" database="muletrainingdb" />
+	</db:config>
+	<db:config name="Database_Config6" doc:name="Database Config" doc:id="b467ad73-56cb-4ac6-a4f5-7260e9147758" >
+		<db:my-sql-connection host="localhost" port="3306" user="root" password="niharika" database="muletrainingdb" />
+	</db:config>
+	<sub-flow name="soap-service-addproduct" doc:id="ec2a5125-4654-466c-82c7-493e0e13d0d6" >
+		<wsc:consume operation="addProduct" doc:name="Consume" doc:id="c1719d22-1c30-4c98-b12a-eb85a1ef1dca" config-ref="Web_Service_Consumer_Config"/>
+		<logger level="INFO" doc:name="add-delay-and-log" doc:id="3f79dd45-e229-4a7d-8054-52a59b39085f" message="#[dw::Runtime::wait('added by calling soap',4000)]" />
+	</sub-flow>
+	<flow name="check-if-product-exists" doc:id="9cfb6d9f-9794-4a1f-be8f-b8198272f738" >
+		<choice doc:name="Choice" doc:id="74eb1f5b-5e71-4c66-bae9-214f471af10c" >
+			<when expression="#[vars.product.productid != null]" >
+				<db:select doc:name="Select" doc:id="477a7a49-140e-438e-abd8-6abfb889fc43" target="productexists" targetValue="#[sizeOf(payload)&gt;0]" config-ref="Database_Config6">
+					<db:sql ><![CDATA[select * from product where product_id = :pid]]></db:sql>
+					<db:input-parameters ><![CDATA[#[{
+	pid: vars.product.productid
+}]]]></db:input-parameters>
+				</db:select>
+			</when>
+			<otherwise >
+				<set-variable value="#[false]" doc:name="Set Variable" doc:id="ea01587d-3c90-458f-b671-d7abb84173e9" variableName="productexists" />
+			</otherwise>
+		</choice>
+	</flow>
+	<flow name="upsertproduct" doc:id="ee3a297e-8e54-4495-b16d-0bb32e52635a" >
+		<choice doc:name="Choice" doc:id="d95922ea-3ac3-48b9-a01d-91bcfc2d57b1" >
+			<when expression="#[vars.productexists == false]" >
+				<db:insert doc:name="Insert" doc:id="6795a69b-269b-4f4f-8cb9-ac1a2454bf9b" config-ref="Database_Config3">
+					<db:sql ><![CDATA[insert into product(product_id,brand_name,name,description,offer_price,original_price) 
+values (:pid,:bname,:name,:desc,:offerprice,:originalprice)]]></db:sql>
+					<db:input-parameters ><![CDATA[#[{
+	pid: vars.product.productid,
+	bname: vars.product.brandName,
+	name: vars.product.name,
+	desc: vars.product.description,
+	offerprice: vars.product.offerPrice,
+	originalprice: vars.product.originalPrice
+}]]]></db:input-parameters>
+				</db:insert>
+				<logger level="INFO" doc:name="Logger" doc:id="86b15d35-8450-483f-8acf-e38a29d5cdd0" message="Inserted" />
+			</when>
+			<otherwise >
+				<db:update doc:name="Update" doc:id="714535ed-0c68-483d-8cea-7233d4f81083" config-ref="Database_Config4">
+					<db:sql ><![CDATA[update product set brand_name = :bname ,description = :desc,name = :name,
+offer_price= :offerprice, original_price=:originalprice where product_id = :productid]]></db:sql>
+					<db:input-parameters ><![CDATA[#[{
+  productid: vars.product.productid,
+	bname: vars.product.brandName,
+	name: vars.product.name,
+	desc: vars.product.description,
+	offerprice: vars.product.offerPrice,
+	originalprice: vars.product.originalPrice
+}]]]></db:input-parameters>
+				</db:update>
+				<logger level="INFO" doc:name="Logger" doc:id="70a4b5d7-f1d4-461f-af1a-434c203cf2ec" message="updated" />
+			</otherwise>
+		</choice>
+		<logger level="INFO" doc:name="Logger" doc:id="b78f8058-b041-4c84-9ad9-7428caa46114" message="#[dw::Runtime::wait('upserted in db',2000)]" />
+	</flow>
+</mule>

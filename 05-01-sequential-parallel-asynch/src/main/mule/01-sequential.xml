@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:wsc="http://www.mulesoft.org/schema/mule/wsc" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/wsc http://www.mulesoft.org/schema/mule/wsc/current/mule-wsc.xsd">
+	<flow name="sequential" doc:id="017b804c-49f4-4e81-a857-d70248e60c63" >
+		<http:listener doc:name="Listener" doc:id="ded87d75-2329-4b22-a41d-2bf552f937e9" path="/addproductsequential" config-ref="HTTP_Listener_config"/>
+		<ee:transform doc:name="Create Product json" doc:id="85615f38-a830-4419-9834-e296457616d4">
+			<ee:message>
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable resource="product.dwl" variableName="product" />
+			</ee:variables>
+		</ee:transform>
+		<flow-ref doc:name="check-if-product-exists" doc:id="2a85a42d-e247-49a1-8e0e-acbf097622c5" name="check-if-product-exists"/>
+		<flow-ref doc:name="upsertproduct" doc:id="9fb65b05-e268-4479-bb32-4bac489c9040" name="upsertproduct"/>
+		<ee:transform doc:name="Transform Message" doc:id="f1473259-30ec-4f24-bdde-823778e119fb" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/xml
+ns ns0 http//way2learnonline.com/domain
+---
+{
+	ns0#addProductRequest: {
+		product: {
+			brandName: vars.product.brandName as String,
+			description: vars.product.description,
+			name: vars.product.name as String,
+			offer: {
+				offerPrice: vars.product.offerPrice as Number
+			},
+			originalPrice: vars.product.originalPrice as Number,
+			productId: vars.product.productid as Number
+		}
+	}
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<flow-ref doc:name="soap-service-addproduct" doc:id="1e80f6c0-7eae-4264-9aed-0053ae9a42ac" name="soap-service-addproduct" />
+		<set-payload value="#['product with id ' ++ vars.product.productid as String ++ ' is upserted']" doc:name="Set Payload" doc:id="4c24da9c-2a76-4790-8f61-eed140013f1e" />
+	</flow>
+</mule>

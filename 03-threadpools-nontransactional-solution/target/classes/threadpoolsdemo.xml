@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="2088150a-98f3-4994-9d64-8096a5b5ef0d" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config> 
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="8b622a65-d112-4f6e-a21e-79880f3fce51" >
+		<db:my-sql-connection host="localhost" port="3306" user="root" password="root" database="muletrainingdb" />
+	</db:config> 
+	<db:config name="Database_Config1" doc:name="Database Config" doc:id="83e50b44-6be0-414b-a4d0-7879045093e1" >
+		<db:my-sql-connection host="localhost" port="3306" user="root" password="niharika" database="muletrainingdb" />
+	</db:config>
+	<db:config name="Database_Config2" doc:name="Database Config" doc:id="6be5af42-3fb0-48a2-836b-b69813bf7144" >
+		<db:my-sql-connection host="localhost" port="3306" user="root" password="niharika" database="muletrainingdb" />
+	</db:config>
+	<flow name="threadpoolsdemoFlow" doc:id="f603ad94-9390-4f9b-8d12-a02120c4f4a2">
+		<http:listener doc:name="Listener" doc:id="ea310ede-8850-49cb-bfd1-046e2eccb0b2" config-ref="HTTP_Listener_config" path="/test"/>
+		<logger level="DEBUG" doc:name="Logger" doc:id="b649506e-48b1-43a9-8b65-169080cd1d71" message="#['Got a Http Request ']"/>
+		<db:select doc:name="Select" doc:id="82c253ba-6959-4c43-a75d-843557cded67" config-ref="Database_Config1">
+			<db:sql ><![CDATA[select * from product]]></db:sql>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="a8fd9b93-bf55-496a-b559-6479a390c5cf" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload map(item,index) -> {
+	pid: log("Got PID as ",item.product_id),
+	brandName: item.brand_name
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<db:insert doc:name="Insert" doc:id="d0cdb0d1-1b55-41fa-930e-84152c9c22e7" config-ref="Database_Config2">
+			<db:sql><![CDATA[insert into product(brand_name,offer_price,original_price) values ('HP',1000,2000) ]]></db:sql>
+		</db:insert>
+		<ee:transform doc:name="Transform Message" doc:id="4516f64b-6cb3-4926-b021-8d6d07a1f2b0" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="myresult" ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<set-payload value='#[log("got payload : ",vars.myresult)]' doc:name="Set Payload" doc:id="0b026282-a198-49b5-9903-dacd335a00e9" />
+		<logger level="INFO" doc:name="Logger" doc:id="39cce838-f5f3-44a8-8573-083d70b6399d" message="After Insertingg"/>
+	</flow>
+</mule>

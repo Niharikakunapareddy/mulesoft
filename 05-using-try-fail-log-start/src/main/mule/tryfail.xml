@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="4995e9ce-9a1a-4240-9200-569155491aa0" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<flow name="tryfailFlow" doc:id="89ed8a2b-4ecd-412a-b8e3-f4514f5b091a" >
+		<http:listener doc:name="Listener" doc:id="1834b708-6fec-4c06-8702-889d062cd1b8" config-ref="HTTP_Listener_config" path="/test"/>
+		<ee:transform doc:name="Transform Message" doc:id="a40422cb-c8cf-4a33-adc9-a7fe99d326b3" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/dw
+import * from dw::Runtime
+
+fun getDataFromFile(fileName:String) = do {
+	
+	var mytryresult = try(
+    	() -> readUrl("classpath://" ++ fileName ,"application/xml")
+    )
+	
+	---
+	mytryresult match {
+		case tr if(tr.success==false) -> 
+	         	  try(
+	         	  	() -> readUrl("classpath://examples/" ++ fileName ,"application/xml")
+	         	  ) match{
+	         	  	case mytr if(mytr.success==false) -> fail("File is not found  even in examples folder")
+	         	  	else ->$.result
+	         	  }
+		
+		else -> mytryresult.result
+	}
+}
+    
+
+---
+getDataFromFile("cities.xml")
+//try(() -> "Helloooo")]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+</mule>

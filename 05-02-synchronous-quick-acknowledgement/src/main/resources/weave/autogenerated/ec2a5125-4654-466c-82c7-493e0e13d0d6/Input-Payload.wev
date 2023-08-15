@@ -1,0 +1,17 @@
+%dw 2.0
+// namespaces
+ns ns0 http//way2learnonline.com/domain
+
+type auto_ec2a5125_4654_466c_82c7_493e0e13d0d6_Input_Payload = {|
+  ns0#addProductRequest: {|
+    product: {|
+      brandName: String, 
+      description: Null, 
+      name: String, 
+      offer: {| offerPrice: Number |}, 
+      originalPrice: Number, 
+      productId: Number
+    |}
+  |}
+|}
+

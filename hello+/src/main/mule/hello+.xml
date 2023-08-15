@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<flow name="hello+Flow1" doc:id="6fd36ef0-b42b-438a-9df9-9503abb61ad1" >
+	</flow>
+	<flow name="hello+Flow" doc:id="663db391-98c2-41ae-ad33-ea2853b32378" >
+		<http:listener doc:name="Listener" doc:id="4eb374b4-4d74-4a56-99f1-c806910c09ce" />
+		<set-payload value="Hello World" doc:name="Set Payload" doc:id="184b5b0b-607b-45da-b6f6-22cfda7790dd" />
+		<logger level="INFO" doc:name="Logger" doc:id="dab0a8af-4bed-4f6e-89cf-8753498af8ee" message="#['Payload is'  ++   message.payload]"/>
+	</flow>
+</mule>

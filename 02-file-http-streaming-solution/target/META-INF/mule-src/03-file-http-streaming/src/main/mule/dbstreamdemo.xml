@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="edb677b9-05f5-4eb2-a362-4f83838bd3e8" >
+		<db:my-sql-connection host="localhost" port="3306" user="root" password="root" database="muletrainingdb" />
+	</db:config> 
+	<flow name="dbstreamdemo" doc:id="a4afdad0-17dc-400f-9214-adcdf924136b" >
+		<http:listener doc:name="Listener" doc:id="e304b1fa-e213-4757-8423-1b08ac3548a7" path="test" config-ref="HTTP_Listener_config">
+			<non-repeatable-stream />
+		</http:listener>
+		<db:select doc:name="Select" doc:id="4a0839e8-07e3-42e0-9c2c-c38df21f11de" config-ref="Database_Config" fetchSize="2">
+			<db:sql>select * from product</db:sql>
+		</db:select>
+		<logger level="INFO" doc:name="Logger" doc:id="3c247ffb-7a3a-4333-b836-4cf123cc3f4e" message="#[payload]"/>
+		<ee:transform doc:name="Transform Message" doc:id="9f559e94-2896-4314-a6ec-8b863d83e287" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+
+payload map(item) -> {
+	pid: item.product_id,
+	name: item.name
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+</mule>

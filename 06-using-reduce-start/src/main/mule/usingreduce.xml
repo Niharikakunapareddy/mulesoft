@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="usingreduceFlow1" doc:id="d17dda6c-fe5a-445b-a4dc-6cdd252443aa" >
+		<ee:transform doc:name="Transform Message" doc:id="65378986-9182-4711-8e86-9926f6f027db" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/dw
+
+var productsXml= readUrl("classpath://examples/products.xml","application/xml")
+var products= productsXml.products.*product
+
+var accumulatedValues = products reduce (product, acc =
+{ 
+hp:  {price: 0 , count: 0},
+ibm: {price: 0 , count: 0},
+samsung: {price: 0 , count: 0},
+apple: {price: 0 , count: 0},
+motorola: {price: 0 , count: 0}
+}) -> acc - lower(product.brandName) ++ (lower(product.brandName)): {
+		price: acc[lower(product.brandName) ] .price + product.originalPrice,
+		count: acc[lower(product.brandName) ].count +1
+}
+
+var avgByBrand = accumulatedValues mapObject (V,K,I) ->{(K): V.price/V.count}
+
+
+---
+
+products map (item,index) -> item ++ 'AVG Price' :avgByBrand[lower(item.brandName)]]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="usingreduceFlow" doc:id="a3b34474-f896-4be1-b61f-a58968097f56" >
+		<ee:transform doc:name="Transform Message" doc:id="e6228eb7-f9c4-4e7d-9311-cb2601f7cfd9" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/dw
+import dw::core::Arrays
+
+var numbers =1 to 5
+var nestedArray = [ [1], [2,3], ["hello"] ]
+var objArray = [
+				{one: 1},
+				{two: 2, three: 3}
+				]
+var stringArray = ["one", "two", "three", "four","five"] 
+
+
+---
+
+stringArray Arrays::countBy (item)-> (sizeOf(item) >3)
+
+//stringArray reduce (item,count=0) -> count + if(sizeOf(item) > 3) 1 else 0
+
+//nestedArray reduce (item,acc=[]) -> acc ++ item
+
+//objArray reduce (item,acc ={}) -> acc ++ item
+
+//numbers reduce(number,acc) -> number ++ acc]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+</mule>

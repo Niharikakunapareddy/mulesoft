@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:scripting="http://www.mulesoft.org/schema/mule/scripting" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:file="http://www.mulesoft.org/schema/mule/file"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/scripting http://www.mulesoft.org/schema/mule/scripting/current/mule-scripting.xsd">
+	<file:config name="File_Config" doc:name="File Config" doc:id="01951285-f7e5-48d9-b2b8-7aafabd0fb32" >
+		<file:connection workingDir="c:\files" />
+	</file:config> 
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="62648f8a-d414-41e5-a2e8-a1f9a02289bd" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<file:config name="File_Config1" doc:name="File Config" doc:id="972a741e-4a20-4d2b-b767-6b8a61f49ea2" >
+		<file:connection workingDir="c:/input" />
+	</file:config>
+	<file:config name="File_Config2" doc:name="File Config" doc:id="dbb350a7-d028-4d46-a5dd-873cb9a0a0b9" >
+		<file:connection workingDir="c:/input" />
+	</file:config>
+	<file:config name="File_Config3" doc:name="File Config" doc:id="bdebdfff-341b-488f-aba3-54c47e4aeb23" >
+		<file:connection workingDir="c:\input" />
+	</file:config>
+	<flow name="basicstreamingFlow1" doc:id="ddb0d199-d5c4-4c1e-8976-0b2b9f6794ed" >
+		<file:listener doc:name="On New or Updated File" doc:id="0e3c4f07-e34f-4feb-ada5-9b6b31583150" config-ref="File_Config3" directory="input" autoDelete="true">
+			<non-repeatable-stream />
+			<scheduling-strategy >
+				<fixed-frequency frequency="5" timeUnit="SECONDS"/>
+			</scheduling-strategy>
+		</file:listener>
+		<flow-ref doc:name="basicstreamingFlow" doc:id="b38e538e-3b48-4bfb-a48f-7975d86cd8f8" name="basicstreamingFlow"/>
+	</flow>
+	<flow name="basicstreamingFlow" doc:id="91c05aab-e1e4-4980-928d-003a4a6dbba8" >
+		<http:listener doc:name="Listener" doc:id="56155737-fcc0-4d18-8999-330fd55f4a1c" path="/write" config-ref="HTTP_Listener_config">
+		</http:listener>
+	
+		<ee:transform doc:name="Transform Message" doc:id="f6d6d885-1f1e-4871-a906-cca5bd33fde3" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="filecontent" ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<scatter-gather doc:name="Scatter-Gather" doc:id="a0746982-8b3b-4e70-9ec1-51677db215d7" >
+			<route >
+				<file:write doc:name="Writetofile1" doc:id="fabf0967-3d14-40ab-b045-cdbd0b28862d" config-ref="File_Config1" path="file1.txt" />
+			</route>
+			<route >
+				<file:write doc:name="Writetofile2" doc:id="f8c3c400-e85f-46dd-a431-6454fee9376a" config-ref="File_Config2" path="file2.txt" />
+			</route>
+		</scatter-gather>
+		<ee:transform doc:name="Transform Message" doc:id="d5bc3ef1-41fb-4815-bcfd-1f555aa3d3e8" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload..payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="12e6d8da-fdd6-43f1-adc9-1870b215448e" message="#['after scatter-gather ' ++ write(payload)]"/>
+	</flow>
+</mule>

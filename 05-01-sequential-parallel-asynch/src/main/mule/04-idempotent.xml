@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:os="http://www.mulesoft.org/schema/mule/os" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd">
+	<os:object-store name="Object_store" doc:name="Object store" doc:id="7ce81cd8-35be-4ce8-ba34-a71c64e25159" maxEntries="100" entryTtlUnit="HOURS" expirationInterval="0"/>
+	<db:config name="Database_Config7" doc:name="Database Config" doc:id="4506851c-d459-41df-87c7-5e9802516bb0" >
+		<db:my-sql-connection host="localhost" port="3306" user="root" password="niharika" database="muletrainingdb" />
+	</db:config>
+	<flow name="idempotentFlow" doc:id="b08b942f-bd5a-409b-9ecb-c78b3c71f586" >
+		<http:listener doc:name="Listener" doc:id="c1271790-7ed9-4265-9e24-7ca7c185f640" path="/addproductidempotent" config-ref="HTTP_Listener_config"/>
+		<ee:transform doc:name="Create Product json" doc:id="ac456d18-d7b3-4016-99a3-4d81d665cfbb" >
+			<ee:message />
+			<ee:variables >
+				<ee:set-variable resource="product.dwl" variableName="product" />
+			</ee:variables>
+		</ee:transform>
+		<idempotent-message-validator doc:name="Idempotent Message Validator" doc:id="60f8f2ef-0cba-4c63-8dc2-52464c5b1141" idExpression='#[(vars.product pluck $ ) joinBy "-"]' objectStore="Object_store"/>
+		<db:insert doc:name="Insert" doc:id="b121434d-6c8c-420e-b512-4decae897b7d" config-ref="Database_Config7">
+			<db:sql ><![CDATA[insert into product(product_id,brand_name,name,description,offer_price,original_price) 
+values (:pid,:bname,:name,:desc,:offerprice,:originalprice)]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	pid: vars.product.productid,
+	bname: vars.product.brandName,
+	name: vars.product.name,
+	desc: vars.product.description,
+	offerprice: vars.product.offerPrice,
+	originalprice: vars.product.originalPrice
+}]]]></db:input-parameters>
+		</db:insert>
+		<set-payload value="Inserted Successfully" doc:name="Set Payload" doc:id="88ffd2a3-087a-4536-b9f6-921b83613432" />
+		<error-handler >
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="53d31f57-4b9d-471b-afdf-098a24e1e860" >
+				<set-payload value="Duplicate Message !!! Product was already added" doc:name="Set Payload" doc:id="5f0bea19-92db-4b22-b339-21d9cfbba98e" />
+			</on-error-continue>
+		</error-handler>
+	</flow>
+</mule>

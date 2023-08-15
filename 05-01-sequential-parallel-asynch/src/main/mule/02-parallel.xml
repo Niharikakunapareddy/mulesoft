@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="parallel" doc:id="80a62266-2504-46db-b3db-34112c400a24" >
+		<http:listener doc:name="Listener" doc:id="21c0ef1c-3379-4309-8d59-8e8e567aedfe" config-ref="HTTP_Listener_config" path="/addproductparallel" />
+		<ee:transform doc:name="Create Product json" doc:id="e66e2630-5cb6-4e14-8c9f-c9cf6add3274" >
+			<ee:message />
+			<ee:variables >
+				<ee:set-variable resource="product.dwl" variableName="product" />
+			</ee:variables>
+		</ee:transform>
+		<scatter-gather doc:name="Scatter-Gather" doc:id="c3412405-b26b-4774-903e-182c589de7fe" >
+			<route >
+				<flow-ref doc:name="check-if-product-exists" doc:id="c71dd41f-5f65-4f84-a737-e3955fa7a959" name="check-if-product-exists" />
+				<flow-ref doc:name="upsertproduct" doc:id="c2d18dfb-f47a-4999-9b1e-637693fca792" name="upsertproduct" />
+			</route>
+			<route >
+				<ee:transform doc:name="Transform Message" doc:id="2acd80a7-b231-416b-b803-fe86a0f27ac8" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/xml
+ns ns0 http//way2learnonline.com/domain
+---
+{
+	ns0#addProductRequest: {
+		product: {
+			brandName: vars.product.brandName as String,
+			description: vars.product.description,
+			name: vars.product.name as String,
+			offer: {
+				offerPrice: vars.product.offerPrice as Number
+			},
+			originalPrice: vars.product.originalPrice as Number,
+			productId: vars.product.productid as Number
+		}
+	}
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<flow-ref doc:name="soap-service-addproduct" doc:id="07467c9c-302c-493a-a899-99a70a03bcd6" name="soap-service-addproduct" />
+			</route>
+		</scatter-gather>
+		<ee:transform doc:name="Transform Message" doc:id="383e8170-874f-4fa3-a1b6-cddb97398338" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+payload...payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<set-payload value="#['product with id ' ++ vars.product.productid as String ++ ' is upserted']" doc:name="Set Payload" doc:id="d35462ca-1754-4a8e-af66-ae4d445ff785" />
+		<error-handler >
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="13a8375f-b4c2-4797-8997-9a37ec7025d8" >
+				<set-payload value="There is a problem.please try again" doc:name="Set Payload" doc:id="63b07c80-0fe6-410f-9403-08f19e3dcff4" />
+			</on-error-continue>
+		</error-handler>
+	</flow>
+</mule>

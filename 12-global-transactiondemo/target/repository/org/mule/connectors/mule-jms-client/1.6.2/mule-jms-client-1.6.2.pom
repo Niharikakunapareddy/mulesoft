@@ -1,0 +1,247 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>org.mule.connectors</groupId>
+    <artifactId>mule-jms-client</artifactId>
+    <version>1.6.2</version>
+
+    <name>JMS Client</name>
+    <description>JMS Client for Mule Connectors</description>
+
+    <properties>
+        <mule.version>4.1.1</mule.version>
+        <muleSpringModuleVersion>1.1.0</muleSpringModuleVersion>
+        <muleApiVersion>1.1.1</muleApiVersion>
+        <muleExtensionApiVersion>1.1.1</muleExtensionApiVersion>
+
+        <commonsIoVersion>2.6</commonsIoVersion>
+        <commonsLangVersion>3.7</commonsLangVersion>
+        <javaxJmsApiVersion>2.0.1</javaxJmsApiVersion>
+        <javax.activation.version>1.2.0</javax.activation.version>
+        <springVersion>5.1.6.RELEASE</springVersion>
+        <hawtbufVersion>1.1</hawtbufVersion>
+        <guavaVersion>27.0-jre</guavaVersion>
+
+        <junitVersion>4.12</junitVersion>
+        <mockitoVersion>2.20.0</mockitoVersion>
+
+        <formatterConfigPath>formatter.xml</formatterConfigPath>
+        <javaFormatter.plugin.version>2.0.1</javaFormatter.plugin.version>
+        <formatterGoal>validate</formatterGoal>
+        <javaVersion>1.8</javaVersion>
+        <project.build.sourceEncoding>ISO-8859-1</project.build.sourceEncoding>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-jms</artifactId>
+            <version>${springVersion}</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>${commonsIoVersion}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>${commonsLangVersion}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>${guavaVersion}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.sun.activation</groupId>
+            <artifactId>javax.activation</artifactId>
+            <version>${javax.activation.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>javax.jms</groupId>
+            <artifactId>javax.jms-api</artifactId>
+            <version>${javaxJmsApiVersion}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mule.runtime</groupId>
+            <artifactId>mule-extensions-api</artifactId>
+            <version>${muleExtensionApiVersion}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mule.runtime</groupId>
+            <artifactId>mule-api</artifactId>
+            <version>${muleApiVersion}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.mule.runtime</groupId>
+            <artifactId>mule-core</artifactId>
+            <version>${mule.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>${junitVersion}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <version>${mockitoVersion}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mule.tests</groupId>
+            <artifactId>mule-tests-unit</artifactId>
+            <version>${mule.version}</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.8.0</version>
+                <configuration>
+                    <encoding>ISO-8859-1</encoding>
+                    <source>${javaVersion}</source>
+                    <target>${javaVersion}</target>
+                    <compilerArgs>
+                        <arg>-parameters</arg>
+                    </compilerArgs>
+                    <testCompilerArgument>-parameters</testCompilerArgument>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>net.revelc.code.formatter</groupId>
+                <artifactId>formatter-maven-plugin</artifactId>
+                <version>${javaFormatter.plugin.version}</version>
+                <configuration>
+                    <compilerCompliance>${javaVersion}</compilerCompliance>
+                    <compilerSource>${javaVersion}</compilerSource>
+                    <compilerTargetPlatform>${javaVersion}</compilerTargetPlatform>
+                    <configFile>${basedir}/${formatterConfigPath}</configFile>
+                    <configJsFile>${basedir}/${formatterConfigPath}</configJsFile>
+                    <aggregator>false</aggregator>
+                    <executionRoot>true</executionRoot>
+                    <encoding>ISO-8859-1</encoding>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>apply-format</id>
+                        <phase>process-sources</phase>
+                        <goals>
+                            <goal>${formatterGoal}</goal>
+                        </goals>
+                        <configuration>
+                            <skipFormatting>${skipVerifications}</skipFormatting>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>com.mycila</groupId>
+                <artifactId>license-maven-plugin</artifactId>
+                <configuration>
+                    <skip>${skipVerifications}</skip>
+                    <header>com/mycila/maven/plugin/license/templates/CPAL.txt</header>
+                    <properties>
+                        <owner>MuleSoft, Inc</owner>
+                        <project.url>http://www.mulesoft.com</project.url>
+                    </properties>
+                    <excludes>
+                        <exclude>target/**</exclude>
+                        <exclude>**/.gitignore</exclude>
+                        <exclude>**/*.txt</exclude>
+                        <exclude>**/*.groovy</exclude>
+                        <exclude>**/*.sh</exclude>
+                        <exclude>**/*.bat</exclude>
+                        <exclude>**/*.ftl</exclude>
+                        <exclude>**/*.xml</exclude>
+                        <exclude>**/*.properties</exclude>
+                        <exclude>**/*.sample</exclude>
+                        <exclude>**/*.md</exclude>
+                        <exclude>**/*.xsl</exclude>
+                        <exclude>**/*.html</exclude>
+                        <exclude>**/*.css</exclude>
+                        <exclude>**/build-number.txt</exclude>
+                        <exclude>**/*.wsdl</exclude>
+                    </excludes>
+                    <includes>
+                        <include>**/*.java</include>
+                    </includes>
+                    <mapping>
+                        <java>SLASHSTAR_STYLE</java>
+                    </mapping>
+                    <encoding>ISO-8859-1</encoding>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>2.22.1</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
+
+    <distributionManagement>
+        <downloadUrl>http://www.mulesoft.org/display/MULE/Download</downloadUrl>
+        <repository>
+            <id>mule-releases</id>
+            <name>Mule Release Repository</name>
+            <url>https://repository-master.mulesoft.org/nexus/content/repositories/releases</url>
+        </repository>
+        <snapshotRepository>
+            <id>mule-snapshots</id>
+            <name>Mule Snapshot Repository</name>
+            <url>https://repository-master.mulesoft.org/nexus/content/repositories/snapshots</url>
+            <uniqueVersion>false</uniqueVersion>
+        </snapshotRepository>
+    </distributionManagement>
+
+    <repositories>
+        <repository>
+            <id>mule</id>
+            <name>Mule Repository</name>
+            <url>https://repository.mulesoft.org/nexus/content/repositories/public/</url>
+        </repository>
+        <repository>
+            <id>spring-snapshot</id>
+            <name>Spring Snapshot Repository</name>
+            <url>http://repo.spring.io/snapshot/</url>
+        </repository>
+    </repositories>
+
+    <pluginRepositories>
+        <pluginRepository>
+            <id>mule-plugin</id>
+            <name>Mule Repository</name>
+            <url>https://repository.mulesoft.org/nexus/content/repositories/public/</url>
+        </pluginRepository>
+    </pluginRepositories>
+</project>

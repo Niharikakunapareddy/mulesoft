@@ -1,0 +1,12 @@
+%dw 2.0
+
+type auto_8a8cf5e4_fa2f_4893_9eb7_c5b4f9517046_Input_Payload = Array<{  interestRate?: Number,   accountID: String,   createdAt: String,   bank: {    bankCode: String,     routingNumber?: String,     swiftBIC?: String,     bankName: String,     _?: Any  },   IBAN: String,   modifiedAt?: String,   accountType: "Credit Card" | "Savings" | "Overdraft Savings" | "Checking",   accountOwner: Array<{    displayName: String,     customerID: String,     ssn: String,     _?: Any  }>, 
+  accountNumber: String, 
+  accountBalance: {
+    amount: String, 
+    currency: String, 
+    _?: Any
+  }, 
+  _?: Any
+}>
+

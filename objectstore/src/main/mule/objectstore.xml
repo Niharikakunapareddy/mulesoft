@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:os="http://www.mulesoft.org/schema/mule/os" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd">
+	<http:listener-config name="objectstore" doc:name="HTTP Listener config" doc:id="b8580fb2-3e73-489d-ad55-0d7ce0800f90" basePath="/store" >
+		<http:listener-connection host="0.0.0.0" port="8084" />
+	</http:listener-config>
+	<os:object-store name="nihastore" doc:name="Object store" doc:id="2ab4790d-02b2-4194-ad80-8d26da3bdb59" persistent="false"/>
+	<flow name="objectstoreFlow1" doc:id="ce9a1dee-f9a6-4edf-bdbc-bcc0eae21ac0" >
+		<http:listener doc:name="Listener" doc:id="2856a65c-054a-4036-a2c7-d842e4196d40" config-ref="objectstore" path="/retrieve"/>
+		<os:retrieve doc:name="Retrieve" doc:id="6d426472-428c-43e2-adcf-61f2188adef3" key="#[attributes.queryParams.key]" objectStore="nihastore">
+			<os:default-value ><![CDATA[Key Doesnot exist in object store]]></os:default-value>
+		</os:retrieve>
+	</flow>
+	<flow name="objectstoreFlow" doc:id="bd81f90e-7c1e-46b1-b1b6-2f697e972ef5" >
+		<http:listener doc:name="Listener" doc:id="d0f0e345-dba6-47b4-8727-8d8f7c62a465" config-ref="objectstore" path="/store"/>
+		<os:store doc:name="Store" doc:id="e45a209c-10ce-4a1e-a7f3-510e1d16ebf4" key="#[attributes.queryParams.mykey]" objectStore="nihastore">
+			<os:value ><![CDATA[#[attributes.queryParams.myvalue]]]></os:value>
+		</os:store>
+		<set-payload value="Data Store in object Store" doc:name="Set Payload" doc:id="39ca465b-b1a1-4231-a647-a116cfbeb378" />
+	</flow>
+</mule>

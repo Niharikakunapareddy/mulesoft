@@ -1,0 +1,13 @@
+{
+  "sampleData": {
+    "2629019f-ba7d-43bc-a1cd-03d2b3dee091": {
+      "payload": "sample_data/products.xml"
+    },
+    "130f0027-1a8b-4877-a0a7-d4bed6481c75": {
+      "payload": "sample_data/products_1.xml"
+    },
+    "9f9bcf40-b60c-4715-94e9-cbaf198e913b": {
+      "payload": "sample_data/products_2.xml"
+    }
+  }
+}

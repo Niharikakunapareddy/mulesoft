@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:bti="http://www.mulesoft.org/schema/mule/ee/bti"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:jms="http://www.mulesoft.org/schema/mule/jms" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/current/mule-jms.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/ee/bti http://www.mulesoft.org/schema/mule/ee/bti/current/mule-bti-ee.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<jms:config name="JMS_Config" doc:name="JMS Config" doc:id="d80e438f-5626-42a8-b0e3-5f1cc5c3d15a" >
+		<jms:active-mq-connection >
+			<jms:caching-strategy >
+				<jms:no-caching /> 
+			</jms:caching-strategy>
+			<jms:xa-connection-pool minPoolSize="5" />
+			<jms:factory-configuration brokerUrl="tcp://localhost:61616" enable-xa="true"/>
+		</jms:active-mq-connection>
+	</jms:config>
+	<db:config name="db1" doc:name="Database Config" doc:id="d154c1b6-0357-4a08-bd6b-14ccf0e408dc" >
+		<db:my-sql-connection host="localhost" port="3306" user="root" password="niharika" database="db1" useXaTransactions="true"/>
+	</db:config>
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="a1b43108-8f48-4ba8-ad9b-c12d0ef3d040" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="42bfb56d-d26e-44f3-9765-3d1e30ab39a8" >
+		<db:my-sql-connection host="localhost" port="3306" user="root" password="niharika" database="db1" />
+	</db:config>
+	<bti:transaction-manager doc:name="Bitronix Transaction Manager" doc:id="2ba876e9-4107-48c4-9316-f53588294b3e" />
+	<jms:config name="JMS_Config1" doc:name="JMS Config" doc:id="72c5478d-b6d7-44c0-b9fe-87d0200644f6" >
+		<jms:active-mq-connection />
+	</jms:config>
+	<flow name="jmsdemoFlow" doc:id="a278cc80-6adc-410b-b276-b9c7069ffe35" initialState="started">
+		<http:listener doc:name="Listener" doc:id="462d624b-841b-4281-9ea3-6c40e22da563" config-ref="HTTP_Listener_config" path="/save"/>
+		<try doc:name="Try" doc:id="d3e115be-a955-4357-adc9-12baeab99625" transactionalAction="ALWAYS_BEGIN" transactionType="XA">
+			<set-variable value="#[attributes.queryParams.brand]" doc:name="Set Variable" doc:id="758d30f0-2ae0-4252-865e-cd40b9aed544" variableName="brand" />
+			<jms:publish doc:name="Publish" doc:id="9b2b0cd1-1743-4e4a-9f43-0376af6bc588" config-ref="JMS_Config" destination="someq" >
+				<jms:message >
+					<jms:body ><![CDATA[#[vars.brand]]]></jms:body>
+				</jms:message>
+			</jms:publish>
+			<db:insert doc:name="Insert" doc:id="7972a3b4-b0ad-4d62-9096-87c948dd7d53" config-ref="db1">
+			<db:sql><![CDATA[insert into product(brand_name,offer_price,original_price) values('SivaBrand',3000,4000)]]></db:sql>
+		</db:insert>
+			<ee:transform doc:name="Transform Message" doc:id="ae9c4718-474c-4384-b172-9a09a909eb08">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/java
+import * from dw::Runtime
+---
+if(vars.brand=='Samsung')  fail("Just for testing!!") else vars.brand]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		</try>
+	</flow>
+</mule>

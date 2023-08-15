@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:file="http://www.mulesoft.org/schema/mule/file"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="using-parallel-foreach" doc:id="822ed928-0f71-468a-b90b-c29ba4d356cc" initialState="started">
+		<file:listener doc:name="On New or Updated File" doc:id="ca34650b-5f47-4679-904e-2edd4d8e42a8" config-ref="File_Config" directory="inputparallel" autoDelete="true" >
+			<scheduling-strategy >
+				<fixed-frequency />
+			</scheduling-strategy>
+		</file:listener>
+		<ee:transform doc:name="Transform Message" doc:id="ade1a6db-6912-43cb-87b3-225f3bc309e2" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<set-variable value="#[[]]" doc:name="Set Variable" doc:id="74c67952-dd7c-4a3c-961c-262de142bd33" variableName="products" />
+		<parallel-foreach doc:name="Parallel For Each" doc:id="b83fd37c-4a00-4bc2-8ff4-ad740a8fabb0" maxConcurrency="10">
+			<ee:transform doc:name="Add Extra Fields to Payload" doc:id="bbdb9a0e-e691-4e82-b31b-64f2e7768589" >
+				<ee:message >
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+
+payload ++ {
+	offer_valid_until: now() as String,
+	offer_price: payload.price *0.75,
+	original_price: payload.price
+	
+}]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+			<ee:transform doc:name="Add product to vars" doc:id="e9a3fa53-0769-4bf7-b58b-e08ecdc40da1" >
+				<ee:message />
+				<ee:variables >
+					<ee:set-variable variableName="products" ><![CDATA[%dw 2.0
+output application/java
+---
+//if(payload.brand=='HP')
+	//dw::Runtime::fail("We dont accept HP")
+//else
+vars.products + payload]]></ee:set-variable>
+				</ee:variables>
+			</ee:transform>
+			<logger level="INFO" doc:name="Logger" doc:id="f108174b-206d-4e69-8ec3-053a013799c2" message="#[dw::Runtime::wait(payload,1000)]" />
+		</parallel-foreach>
+		<logger level="INFO" doc:name="Log Vars" doc:id="ceb5153e-9350-44a8-89f1-94de6eef7b2a" message="#[vars.products]" />
+		<ee:transform doc:name="Transform Message1" doc:id="25f883d6-d7de-4def-b246-591f95b7e917" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Log Payload" doc:id="8b7685dd-9e1e-4a31-935c-c69563ec024e" message="#[payload]" />
+	</flow>
+</mule>

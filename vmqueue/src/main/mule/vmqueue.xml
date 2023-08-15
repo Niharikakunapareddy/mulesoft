@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:file="http://www.mulesoft.org/schema/mule/file"
+	xmlns:vm="http://www.mulesoft.org/schema/mule/vm"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/vm http://www.mulesoft.org/schema/mule/vm/current/mule-vm.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="2fd9f409-3c70-45b6-8231-753f39f86691" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<vm:config name="VM_Config" doc:name="VM Config" doc:id="8093497b-a155-424b-b3d3-62332f687619" >
+		<vm:queues >
+			<vm:queue queueName="myq" queueType="PERSISTENT" />
+		</vm:queues>
+	</vm:config>
+	<file:config name="File_Config" doc:name="File Config" doc:id="00810163-3c95-46f1-bf65-23f8075c692f" />
+	<file:config name="File_Config1" doc:name="File Config" doc:id="96ef159d-6a10-44ca-8811-771883e1f4b9" >
+		<file:connection workingDir="c:\input" />
+	</file:config>
+	<flow name="vmqueueFlow1" doc:id="3cc2cfc0-9e4e-45ed-85f1-1f5d31797ffc" >
+		<vm:listener queueName="myq" doc:name="Listener" doc:id="319f7c9f-b03c-48eb-bb93-f18fe5fc9205" config-ref="VM_Config"/>
+		<logger level="INFO" doc:name="Logger" doc:id="0c91c980-5eb6-4078-b3ad-941fcf7d6970" message="#['Received' ++ write(payload)]"/>
+	</flow>
+	<flow name="vmqueueFlow" doc:id="43200475-8aed-41fe-9393-576f2dce2de6" >
+		<file:listener doc:name="On New or Updated File" doc:id="01e4c427-3647-42e3-af1e-6a755353fc2a" config-ref="File_Config1" directory="files" autoDelete="true">
+			<scheduling-strategy >
+				<fixed-frequency />
+			</scheduling-strategy>
+		</file:listener>
+		<ee:transform doc:name="Transform Message" doc:id="0bb88644-a063-46b7-8bc4-21e7512f754c" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<foreach doc:name="For Each" doc:id="9eeb4554-bb71-459a-aa7c-cb908ccab896" >
+			<vm:publish queueName="myq" doc:name="Publish" doc:id="eca8af94-f5a8-46cd-81e0-61552324e2c2" config-ref="VM_Config" />
+		</foreach>
+	</flow>
+</mule>

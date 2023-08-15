@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<http:listener-config name="myhttplistenerconfig" doc:name="HTTP Listener config" doc:id="62192823-5b25-42d1-b069-8741ed4349f5" basePath="/x" >
+		<http:listener-connection host="0.0.0.0" port="1234" />
+	</http:listener-config>
+	<flow name="basicsFlow1" doc:id="dc8b4aaa-8502-4059-a4ba-4285d7e4e59a" >
+	</flow>
+	<flow name="basicsFlow2" doc:id="dd5a9beb-740b-497f-a849-67d807d9a796" >
+	</flow>
+	<flow name="basicsFlow" doc:id="389e3c95-a5bf-481d-9ca9-94fca4bee551" >
+		<http:listener doc:name="Listener" doc:id="3301c2c1-9a4d-4be7-a537-331705eb5b8f" config-ref="myhttplistenerconfig" path="/hello/(myuser)/(mycity)"/>
+		<set-payload value="#['Hello  '  ++  attributes.uriParams.username as String  ++  'from  ' ++  attributes.uriParams.city as String]" doc:name="Set Payload" doc:id="6874fc0c-f5fe-4f01-a1cd-5c6a4d3dcbeb" />
+		<set-variable value="#[attributes.uriParams.myuser]" doc:name="Set Variable" doc:id="20f41786-d76f-4d3d-b1f3-4bb9f91f233b" variableName="uname"/>
+		<logger level="INFO" doc:name="Logger" doc:id="f35bf253-332b-4ac0-8a0d-5d89a0d858a4" message="#['Payload is  '   ++   message.payload]"/>
+	</flow>
+</mule>

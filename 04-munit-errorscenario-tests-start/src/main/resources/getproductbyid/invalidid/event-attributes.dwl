@@ -1,0 +1,5 @@
+{
+	queryParams:{
+		id: "abc"
+	}
+}

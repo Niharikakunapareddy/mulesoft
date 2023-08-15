@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:batch="http://www.mulesoft.org/schema/mule/batch"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/batch http://www.mulesoft.org/schema/mule/batch/current/mule-batch.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="428cb47a-1149-4c9f-8b30-a99efcedfeb7" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<flow name="batchFlow" doc:id="6a8dbf47-f6e4-44b3-bfd5-1d10347701ea" >
+		<http:listener doc:name="Listener" doc:id="e3bcd842-cafe-4d76-a8da-ba00ac6cd264" config-ref="HTTP_Listener_config" path="/batch"/>
+		<ee:transform doc:name="Transform Message" doc:id="cdf816b8-375d-4cfd-bd2a-043772dfc9e4" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+1 to 50]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<batch:job jobName="batchBatch_Job" doc:id="0350a13f-0047-4862-8551-bc3e6719b131" blockSize="2" maxFailedRecords="10">
+			<batch:process-records >
+				<batch:step name="s1" doc:id="b327f232-658d-4e1c-aedf-857f4de54d50" >
+					<logger level="INFO" doc:name="Logger" doc:id="23dc0adc-8438-4667-af42-07b406e3a9d7" />
+					<ee:transform doc:name="Transform Message" doc:id="e2d1ea2e-7fe0-4e7f-8ca7-26f402ea1416" >
+						<ee:message >
+							<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+if(payload == 10)
+ dw::Runtime::fail('We dont accept 10')
+else
+payload]]></ee:set-payload>
+						</ee:message>
+					</ee:transform>
+					<batch:aggregator doc:name="Batch Aggregator" doc:id="15ea526f-8be3-4132-97df-00539a25c850" size="10">
+						<logger level="INFO" doc:name="Logger" doc:id="00c1f168-eeee-42db-b28f-60e17233772d" message="#['inside aggregator' ++ write(payload)]"/>
+					</batch:aggregator>
+				</batch:step>
+				<batch:step name="s2" doc:id="844469ec-2031-4224-9430-e1164e147d9a" acceptExpression="#[mod(payload,2)==0]">
+					<logger level="INFO" doc:name="Logger" doc:id="b7d4a5f9-a56d-4a28-a70f-6d614466c18a" message="#[dw::Runtime::wait('inside s2' ++ payload,1000)]"/>
+				</batch:step>
+				<batch:step name="s3" doc:id="1fcbea18-4340-44fb-8946-b8b01adc5bb1" acceptPolicy="ONLY_FAILURES">
+					<logger level="INFO" doc:name="Logger" doc:id="e1d8d99b-baee-4c93-b064-c80aaeb4c2e4" message="#[dw::Runtime::wait('inside s3' ++ payload,1000)]"/>
+				</batch:step>
+			</batch:process-records>
+			<batch:on-complete >
+				<logger level="INFO" doc:name="Logger" doc:id="53f03ad8-586e-47ac-8df9-861176b93e1c" message="Inside on Complete Phase"/>
+			</batch:on-complete>
+		</batch:job>
+		<set-payload value="Batch Job Created... Records will be processed in the bacckground parallely" doc:name="Set Payload" doc:id="25583a90-3fe7-4a88-afee-12064a4ddae8" />
+	</flow>
+</mule>

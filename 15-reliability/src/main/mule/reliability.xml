@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:jms="http://www.mulesoft.org/schema/mule/jms" xmlns:wsc="http://www.mulesoft.org/schema/mule/wsc"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:vm="http://www.mulesoft.org/schema/mule/vm" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/vm http://www.mulesoft.org/schema/mule/vm/current/mule-vm.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/wsc http://www.mulesoft.org/schema/mule/wsc/current/mule-wsc.xsd
+http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/current/mule-jms.xsd">
+	<vm:config name="VM_Config" doc:name="VM Config" doc:id="434a26fa-259a-4999-8a81-55a850b19091" >
+		<vm:queues >
+			<vm:queue queueName="inq" queueType="PERSISTENT" />
+			<vm:queue queueName="waitingq" queueType="PERSISTENT" />
+			<vm:queue queueName="dlq" queueType="PERSISTENT" />
+		</vm:queues>
+	</vm:config>
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="9f0f86a7-c1e9-494a-a781-457c51e22a52" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="2fa37dbf-48d4-4dd3-8364-6111445b8dc0" >
+		<db:my-sql-connection host="localhost" port="3306" user="root" password="root" database="muletrainingdb" />
+	</db:config>
+	<wsc:config name="Web_Service_Consumer_Config" doc:name="Web Service Consumer Config" doc:id="2af21607-fe9d-4f98-ad1c-c476614efdb8" >
+		<wsc:connection wsdlLocation="products.wsdl" service="ProductServicePortService" port="ProductServicePortSoap11" address="http://localhost:6060/ws" >
+			<wsc:custom-transport-configuration >
+				<wsc:default-http-transport-configuration timeout="10000" />
+			</wsc:custom-transport-configuration>
+			<wsc:web-service-security actor="http://schemas.xmlsoap.org/soap/actor/next" />
+		</wsc:connection>
+	</wsc:config>
+	<jms:config name="JMS_Config" doc:name="JMS Config" doc:id="0c1c3e97-af9e-422b-a3c2-f77223e23680" >
+		<jms:active-mq-connection >
+			<jms:factory-configuration brokerUrl="tcp://localhost:61616" />
+		</jms:active-mq-connection>
+	</jms:config>
+	<db:config name="Database_Config1" doc:name="Database Config" doc:id="4dd6b68e-22e4-409c-9145-dc8969ad85d6" >
+		<db:my-sql-connection host="localhost" port="3306" user="root" password="niharika" database="muletrainingdb" />
+	</db:config>
+	<flow name="AquisitionFlow" doc:id="650fb7c4-b8d7-4a11-9c7e-d44cf29e7b1c" >
+		<http:listener doc:name="Listener" doc:id="a952ba2a-309c-4358-8beb-8f0817fcb2c4" config-ref="HTTP_Listener_config" path="/addproduct"/>
+		<ee:transform doc:name="Transform Message" doc:id="604ddf20-879c-4078-b3ba-cd697581f170" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable resource="product.dwl" variableName="product" />
+			</ee:variables>
+		</ee:transform>
+		<db:insert doc:name="Insert" doc:id="a35118a1-426e-44f3-8c9a-987f560b6ab7" config-ref="Database_Config1" >
+			<db:sql ><![CDATA[insert into productprocessingstatus(productid,status) values(:pid,:status)]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	pid: vars.product.productid,
+	status: "processing"
+}]]]></db:input-parameters>
+		</db:insert>
+		<jms:publish doc:name="Publish" doc:id="0bc84646-70e5-45e0-b32c-2b3fdb393883" config-ref="JMS_Config" destination="inq"/>
+		<ee:transform doc:name="Transform Message1" doc:id="c2dd2b84-7249-41a7-8c84-c6833534cb6e" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	statusCode: 200,
+	message: "success",
+	callbackURL: "http://localhost:8081/products/" ++ vars.product.productid as String,
+	time: now() 
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="ProcessingFlow" doc:id="6b680041-78b3-4fed-9b52-62582f8d6ae4" >
+		<jms:listener doc:name="On New Message" doc:id="e504bc27-461f-4d1f-9239-1ae4acdf2e0d" config-ref="JMS_Config" destination="inq">
+			<jms:consumer-type >
+				<jms:queue-consumer />
+			</jms:consumer-type>
+		</jms:listener>
+		<set-variable value="#[payload]" doc:name="Set Variable" doc:id="f314f8e0-c743-4133-910d-2205639c881c" variableName="product" />
+<!-- 		<db:insert doc:name="Insert" doc:id="10acb7df-984f-4e45-9789-702e7e662fbf" config-ref="Database_Config" >
+			<db:sql ><![CDATA[insert into product(product_id,brand_name,name,description,offer_price,original_price) 
+values (:pid,:bname,:name,:desc,:offerprice,:originalprice)]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	pid: vars.product.productid,
+	bname: vars.product.brandName,
+	name: vars.product.name,
+	desc: vars.product.description,
+	offerprice: vars.product.offer_price,
+	originalprice: vars.product.original_price
+}]]]></db:input-parameters>
+		</db:insert> -->
+		<ee:transform doc:name="Transform Message" doc:id="d28feeac-c5be-4827-bc12-db66e0a4a7e1">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/xml
+ns ns0 http//way2learnonline.com/domain
+---
+{
+	ns0#addProductRequest: {
+		product: {
+			brandName: vars.product.brand as String,
+			description: vars.product.desc,
+			name: vars.product.name as String,
+			offer: {
+				offerPrice: vars.product.offer_price as Number
+			},
+			originalPrice: vars.product.original_price as Number,
+			productId: vars.product.productid as Number
+		}
+	}
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<wsc:consume operation="addProduct" doc:id="c1562c76-2e40-40db-b1e3-c0be5e2fd905" config-ref="Web_Service_Consumer_Config" doc:name="Consume" />
+		<error-handler >
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="8982ce6e-a167-4896-8bf5-3032cce99a39" >
+				<ee:transform doc:name="Transform Message" doc:id="cb532c9a-d33c-4cba-b6ef-b7f8024d20a3">
+					<ee:message>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable resource="jmsuserproperties.dwl" variableName="userProperties" />
+					</ee:variables>
+				</ee:transform>
+				<jms:publish doc:name="Publish" doc:id="21f9321c-bb5b-4714-a35b-b957f2777e14" config-ref="JMS_Config" destination="waitingq">
+					<jms:message>
+						<jms:body><![CDATA[#[vars.product]]]></jms:body>
+						<jms:properties><![CDATA[#[vars.userProperties]]]></jms:properties>
+					</jms:message>
+				</jms:publish>
+			</on-error-continue>
+		</error-handler>
+	</flow>
+	<flow name="WaitingQFlow" doc:id="e76037f3-4af2-44cc-9f46-b8ba9e12f1f1" >
+		<vm:listener queueName="waitingq" doc:name="Listener for waitingq" doc:id="c5655b36-6648-438e-a984-b27f9d813ac9" config-ref="VM_Config" />
+		<ee:transform doc:name="Transform Message" doc:id="eb033241-509f-4bb6-8fd4-c5cb1aa12f69" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+(payload ) ++ {
+	retryTime: payload.publishTime +("PT" ++ payload.retryDelayinSeconds as String++ "S")
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<db:insert doc:name="Insert" doc:id="3690b4df-8c5b-4309-b84d-d93139a099ae" config-ref="Database_Config">
+			<db:sql ><![CDATA[INSERT INTO `tasks`
+(`targetqueue`,`payload`,`retrycount`,`maxretrycount`,`retrydelayinseconds`,
+`publishtime`,`retryTime`,`status`)
+VALUES
+(:targetQueue,:payload,:retryCount,:maxRetryCount,:retryDelayinSeconds,:publishTime,:retryTime,'RECEIVED');]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	targetQueue: payload.targetQueue,
+	retryCount: payload.retryCount,
+	retryDelayinSeconds: payload.retryDelayinSeconds,
+	maxRetryCount: payload.maxRetryCount,
+	publishTime: payload.publishTime  ,
+	retryTime: payload.retryTime,
+	payload: write(payload.originalPayload,"application/json"),
+	status: 'RECEIVED'
+}]]]></db:input-parameters>
+		</db:insert>
+		<logger level="INFO" doc:name="Logger" doc:id="5376ba94-0dcf-45ca-a95a-e460e49ecf14" message="Inserted"/>
+	</flow>
+	<flow name="reliabilityFlow" doc:id="6dd52ef7-c107-471b-8caa-609daf7b2a25" >
+		<scheduler doc:name="Scheduler" doc:id="64a1510b-9664-4c61-8d92-d74e1fcad41e" >
+			<scheduling-strategy >
+				<fixed-frequency frequency="5" timeUnit="SECONDS"/>
+			</scheduling-strategy>
+		</scheduler>
+		<db:select doc:name="Select" doc:id="96603b2e-25bd-4acc-a898-3fb236de78ec" config-ref="Database_Config">
+			<db:sql ><![CDATA[select * from tasks where retryTime < now() and status = 'RECEIVED']]></db:sql>
+		</db:select>
+		<foreach doc:name="For Each" doc:id="e1cbf8ff-40c7-45bf-8c8d-681527f5aafa" >
+			<choice doc:name="Choice" doc:id="1df23aad-4575-4c09-abb6-f4149a61d80c" >
+				<when expression="#[payload.retrycount &lt;payload.maxretrycount]">
+					<ee:transform doc:name="Transform Message" doc:id="40ff0932-cfe9-46d8-8418-e5f639b5509b" >
+						<ee:message >
+							<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+{
+}]]></ee:set-payload>
+						</ee:message>
+					</ee:transform>
+				</when>
+			</choice>
+		</foreach>
+		<choice doc:name="Choice" doc:id="0755b0a4-da86-4a73-b165-6062220f52a9" >
+			<when expression="#[sizeOf(payload)&gt;0]">
+			</when>
+		</choice>
+	</flow>
+	<flow name="reliabilityFlow1" doc:id="16c1dd8e-ac51-42aa-8b9c-26a7b9c732d4" >
+	</flow>
+</mule>

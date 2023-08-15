@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="5474b7f7-3a97-4635-87af-e8de0fb91846" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="485c38bc-3224-4b07-95a6-c486e789ffd4" >
+		<db:my-sql-connection host="${db.host}" port="3306" user="${db.username}" password="${db.password}" database="muletrainingdb" />
+	</db:config> 
+	<configuration-properties doc:name="Configuration properties" doc:id="0b7908c9-b9d4-47bd-a401-902963744cdc" file="app-dev.yaml" />
+	<db:config name="Database_Config1" doc:name="Database Config" doc:id="e2e3e7f8-4abb-4d61-8bab-d80994d976c0" >
+		<db:my-sql-connection host="localhost" port="3306" user="root" password="niharika" database="muletrainingdb" />
+	</db:config>
+	<db:config name="Database_Config2" doc:name="Database Config" doc:id="1f91c538-b4d7-41c8-8597-65d90c9b7bcc" >
+		<db:my-sql-connection host="localhost" port="3306" user="root" password="niharika" database="muletrainingdb" />
+	</db:config>
+	<flow name="mainflow" doc:id="b0111d52-f218-4fb7-a843-1532f2bf7628" >
+		<http:listener doc:name="Listener" doc:id="dffd3968-4371-409c-a250-e2f7a0e23a54" config-ref="HTTP_Listener_config" path="/products"/>
+		<choice doc:name="Choice" doc:id="edb5a42a-33ad-4641-9126-486039930dbc" >
+			<when expression="#[attributes.queryParams.id !=null]">
+				<set-variable value="#[attributes.queryParams.id]" doc:name="Set Variable" doc:id="799cfeb3-d79c-4ba1-ac73-56097472043b" variableName="productid"/>
+				<flow-ref doc:name="productsbyidFlow" doc:id="1f562d14-9151-42bd-9f78-284716c4a7a7" name="productsbyidFlow" />
+			</when>
+			<when expression="attributes.queryParams.brand !=null">
+				<set-variable value="#[attributes.queryParams.brand]" doc:name="Set Variable" doc:id="e1a4714b-be69-4ea7-b96d-b0e1b8e65b54" variableName="brand"/>
+				<flow-ref doc:name="productsbybrand" doc:id="9682e6de-f012-4c2e-9a1e-dc8974438acc" name="productsbybrand"/>
+			</when>
+			<otherwise >
+				<set-payload value="Invalid Request" doc:name="Set Payload" doc:id="e4e40fcf-9bf5-4267-854b-0ef7eb7eb18c" />
+			</otherwise>
+		</choice>
+	</flow>
+	<flow name="productsbyidFlow" doc:id="2e3b2466-26a7-48ec-acf5-69f971077c82" >
+		<db:select doc:name="Select" doc:id="99a3c1ac-1932-40b0-bb68-318dfd08142c" config-ref="Database_Config1">
+			<db:sql ><![CDATA[select * from product where product_id = :id]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	id: vars.productid
+}]]]></db:input-parameters>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="db5e5778-c504-49de-a55b-f372cef0e263" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+if(sizeOf(payload)>0)
+payload[0]
+else
+{}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="productsbybrand" doc:id="4ff066c2-478f-420a-a58b-557b4ca5efb9" >
+		<db:select doc:name="Select" doc:id="44ddcfd9-bc03-4c41-a974-6eae082aabc3" config-ref="Database_Config2">
+			<db:sql ><![CDATA[select * from product where brand_name = :brand]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	brand: vars.brand
+}]]]></db:input-parameters>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="355c6699-07f7-4713-a3d6-2d300bea6ba3" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+</mule>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="a6d7b89c-eb5f-48c1-a309-47d88b949bae" >
+		<http:listener-connection host="0.0.0.0" port="${http.port}" />
+	</http:listener-config>
+	<configuration-properties doc:name="Configuration properties" doc:id="1bdcdd06-4151-43a1-b025-854594fb0e54" file="app.yaml" />
+	<flow name="cloudhubFlow" doc:id="8a40d9e4-f137-47ab-b74a-2d6a73793434" >
+		<http:listener doc:name="Listener" doc:id="003267f3-338e-4fce-a287-099a5eb6349b" config-ref="HTTP_Listener_config" path="/hello"/>
+		<set-payload value="#['hello '++ attributes.queryParams.name as String]" doc:name="Set Payload" doc:id="352b7ea3-af3a-4417-8bf7-ecef25c6d29d" />
+	</flow>
+</mule>

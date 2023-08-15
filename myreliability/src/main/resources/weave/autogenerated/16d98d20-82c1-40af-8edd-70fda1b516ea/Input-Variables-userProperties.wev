@@ -1,0 +1,4 @@
+%dw 2.0
+
+type auto_16d98d20_82c1_40af_8edd_70fda1b516ea_Input_Variables_userProperties = { _?: Any }
+

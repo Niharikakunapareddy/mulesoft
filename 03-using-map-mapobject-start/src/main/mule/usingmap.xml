@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="usingmapFlow" doc:id="60c92aaf-6079-427d-b432-e72027fe0aa8" >
+		<ee:transform doc:name="Transform Message" doc:id="9df0ca1a-d38f-41b2-996b-af19e79b567f" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/dw
+var products = payload.products.*product
+
+fun getImages(imagesArray) ={
+		(
+			imagesArray map(item,index) -> img:item
+		)
+	}
+
+var mappedProducts=products map (item,index) -> {
+	'name':item.name,
+	productId:item.@productId,
+	brandName:item.brandName,
+	price:item.originalPrice,
+	(imgs: getImages(item.images.*image)) if item.images?
+}
+
+var myproduct = {
+  brandName: "Apple",
+  description: "Apple Laptop",
+  images: {
+    image: "image3.jpeg",
+    image: "image4.jpeg",
+    image: "image5.jpeg"
+  },
+  name: "Macbook Pro laptop",
+  offer: {
+    offerPrice: "3000.0" as Number,
+    offerValidUntil: "2016-06-29" as Date
+  },
+  originalPrice: "3000.0"
+}
+
+fun converKeysToUpper(myobject) =
+      if(typeOf(myobject) == Object)
+         myobject mapObject (V,K,I) -> (upper(K)): converKeysToUpper(V)
+       else if(typeOf(myobject) == Date)
+     myobject  as  String {format:'yyyy-dd'}
+      else if(typeOf(myobject) == Number)
+     myobject  as  String {format:'#,###,###'}
+     else
+      myobject
+fun   converKeysToUpperUsingMatch(myobject) =
+	myobject match{
+		case is String -> myobject
+		case is Number -> myobject  as  String {format:'#,###,###'}
+		case is Date -> myobject  as  String {format:'yyyy-dd'}
+		else -> myobject mapObject (V,K,I) -> (upper(K)): converKeysToUpperUsingMatch(V)
+	}
+   
+---
+//myproduct
+         
+ converKeysToUpperUsingMatch(myproduct)
+
+
+//mappedProducts distinctBy (item,index) -> item.productId
+
+//mappedProducts groupBy (item,index) -> item.brandName
+
+//myproduct mapObject (V,K,I) -> (upper(K)):V]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+</mule>

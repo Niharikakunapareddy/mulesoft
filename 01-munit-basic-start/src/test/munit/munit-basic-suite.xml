@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:munit="http://www.mulesoft.org/schema/mule/munit" xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+		http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+		http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd">
+	<munit:config name="munit-basic-suite.xml" />
+	<munit:test name="getproductbyid-existingid" doc:id="e0c18409-cdec-4d88-be67-a5e6ac36ad4b" >
+		<munit:behavior >
+			<munit:set-event doc:name="Set Input" doc:id="14c4d281-e53d-4024-9329-3c0578f564b1" >
+				<munit:payload value="#[readUrl('classpath://getproductbyidexistingid\set-event_payload.dwl')]" encoding="UTF-8" />
+				<munit:attributes value="#[readUrl('classpath://getproductbyidexistingid\set-event_attributes.dwl')]" />
+			</munit:set-event>
+		</munit:behavior>
+		<munit:execution >
+			<flow-ref doc:name="Flow-ref to mainflow" doc:id="ae6826a2-5981-4fa0-a446-106b0553539c" name="mainflow"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert doc:name="Assert payload" doc:id="dbd8d180-67cb-4815-965a-be10f9e8e1d3" message="The payload does not match">
+				<munit-tools:that ><![CDATA[#[%dw 2.0
+import getproductbyidexistingid::assert_expression_payload
+---
+assert_expression_payload::main({payload: payload, attributes: attributes, vars: vars})]]]></munit-tools:that>
+			</munit-tools:assert>
+			<munit-tools:verify-call doc:name="Verify productsbyidFlow" doc:id="fecb1845-08f2-4f91-99d9-9f6250749a96" processor="flow-ref" times="1">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="1f562d14-9151-42bd-9f78-284716c4a7a7" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+			</munit-tools:verify-call>
+		</munit:validation>
+	</munit:test>
+	<munit:test name="getproductbyidwithnonexistingid" doc:id="8ec3755a-11e0-4fcd-bd0e-dd041f7f4a4f" >
+		<munit:behavior >
+			<munit-tools:spy doc:name="Spy productsbyidFlow" doc:id="febe61b2-d03e-4758-bc11-a3fb6232ae2e" processor="flow-ref">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="1f562d14-9151-42bd-9f78-284716c4a7a7" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:before-call >
+					<munit-tools:assert doc:name="Assert payload" doc:id="de0b693c-b3c0-48db-b343-a7e3a93c1391" message="The payload does not match">
+						<munit-tools:that ><![CDATA[#[%dw 2.0
+import getproductbyidwithnonexistingid::spy_assert_payload
+---
+spy_assert_payload::main({payload: payload, attributes: attributes, vars: vars})]]]></munit-tools:that>
+					</munit-tools:assert>
+				</munit-tools:before-call>
+				<munit-tools:after-call >
+					<munit-tools:assert doc:name="Assert payload" doc:id="266ac752-468c-478e-b928-301723101b26" message="The payload does not match">
+						<munit-tools:that ><![CDATA[#[%dw 2.0
+import getproductbyidwithnonexistingid::spy_assert_payload1
+---
+spy_assert_payload1::main({payload: payload, attributes: attributes, vars: vars})]]]></munit-tools:that>
+					</munit-tools:assert>
+				</munit-tools:after-call>
+			</munit-tools:spy>
+			<munit:set-event doc:name="Set Input" doc:id="027a38cd-e6be-44bd-9c87-66190cc65672" >
+				<munit:payload value="#[readUrl('classpath://getproductbyidwithnonexistingid\set-event_payload.dwl')]" encoding="UTF-8" />
+				<munit:attributes value="#[readUrl('classpath://getproductbyidwithnonexistingid\set-event_attributes.dwl')]" />
+			</munit:set-event>
+		</munit:behavior>
+		<munit:execution >
+			<flow-ref doc:name="Flow-ref to mainflow" doc:id="847134f0-ed75-40f3-b6a7-44d5112580a1" name="mainflow"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert doc:name="Assert payload" doc:id="f12604c5-a202-4022-b979-9f2726761889" message="The payload does not match">
+				<munit-tools:that ><![CDATA[#[%dw 2.0
+import getproductbyidwithnonexistingid::assert_expression_payload
+---
+assert_expression_payload::main({payload: payload, attributes: attributes, vars: vars})]]]></munit-tools:that>
+			</munit-tools:assert>
+			<munit-tools:verify-call doc:name="Verify productsbyidFlow" doc:id="59a26d48-dbe6-415a-81f4-b3197304e58f" processor="flow-ref" times="1">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="1f562d14-9151-42bd-9f78-284716c4a7a7" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+			</munit-tools:verify-call>
+		</munit:validation>
+	</munit:test>
+
+
+</mule>

@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:validation="http://www.mulesoft.org/schema/mule/validation"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:wsc="http://www.mulesoft.org/schema/mule/wsc" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	 xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" 
+	 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/wsc http://www.mulesoft.org/schema/mule/wsc/current/mule-wsc.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="b8bad242-743d-4595-a3d0-c477085d5538" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<validation:config name="Validation_Config" doc:name="Validation Config" doc:id="351e7c1c-2f5c-4e99-bdef-56663705ee20" />
+	<wsc:config name="Web_Service_Consumer_Config" doc:name="Web Service Consumer Config" doc:id="9aaa235d-ec31-4fca-bf47-8e4868a05d06" >
+		<wsc:connection wsdlLocation="products.wsdl" service="ProductServicePortService" port="ProductServicePortSoap11" address="http://localhost:6060/ws" />
+	</wsc:config>
+	<configuration doc:name="Configuration" doc:id="fe0cb09f-9f0e-415c-81a4-c53f3860c520" defaultErrorHandler-ref="exceptions-demoError_Handler" />
+	<error-handler name="exceptions-demoError_Handler" doc:id="0074213c-56b1-44f3-959b-277bbe627bd6" >
+		<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="bb48cedd-ed1a-4102-9e40-869140e56983" >
+			<set-payload value="Inside Global Error Handler---on continue" doc:name="Set Payload" doc:id="bd04aabd-537d-477e-bef7-f831123ecbf8" />
+			<logger level="INFO" doc:name="Logger" doc:id="26e69001-32d2-4b06-9d76-b018d3010db8" message="Inside Global Error Handler---on continue"/>
+		</on-error-continue>
+	</error-handler>
+	<flow name="getproductsbyname" doc:id="d954f7f3-18a7-4285-a430-eaa9a82e9466" >
+		<wsc:consume operation="getProductsByName" config-ref="Web_Service_Consumer_Config" doc:name="Consume" doc:id="4f535350-6c55-40d9-bb10-93282d305486">
+			<error-mapping sourceType="WSC:CANNOT_DISPATCH" targetType="APP:NIHACANNOTDISPATCH" />
+		</wsc:consume>
+		<logger level="INFO" doc:name="Logger" doc:id="b45dbcf6-8ee9-4d00-84a5-28a42d9b8d8e" message="#[payload]"/>
+		<ee:transform doc:name="Transform Message" doc:id="0d0c39a3-0e01-47d8-90cc-699948f41303" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>  
+	</flow>
+	<flow name="ValidateAndTransform" doc:id="65e8fa3b-488e-433f-bbe5-9f29d816e89b" >
+		<validation:is-true doc:name="Is true" doc:id="e268bfe3-66f5-40cb-820c-a341ffa6f24c" config-ref="Validation_Config" expression="#[['Hp','Mac'] contains  vars.productname]" message="Invalid productname!!!!!!!!!!!!!!!!!!!!!!!" />
+		<ee:transform doc:name="Transform Message" doc:id="9940b230-b383-43c1-a7a1-29c6c6009a55">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/xml
+ns ns0 http//way2learnonline.com/domain
+---
+{
+	ns0#getProductsByNameRequest: {
+		name: vars.productname as String
+	}
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<flow-ref doc:name="getproductsbyname" doc:id="bb84052b-0b6b-42fe-8a0a-84b1625045ce" name="getproductsbyname"/>
+		<logger level="INFO" doc:name="Logger" doc:id="8c3afb53-0ca9-4c9f-8d0a-312f12905411" message="inside validate flow after calling webservice flow"/>
+		<error-handler >
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="00a63ad8-e437-44c7-b89e-fcbf80138e38" >
+				<set-payload value="inside on error propagate of validate flow=========" doc:name="Set Payload" doc:id="4125b04d-dc06-448a-9bfa-997c8904e07c" />
+				<logger level="INFO" doc:name="Logger" doc:id="12c6941a-9aeb-44f0-be82-a85713277cd8" message="inside on error propogate of validate flow=========" />
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+	<flow name="mainflow" doc:id="ee659804-71de-4bec-b8b8-508498da5f77" >
+		<http:listener doc:name="Listener" doc:id="ac18afed-01f7-4ca0-88f0-6823e615a651" config-ref="HTTP_Listener_config" path="/error">
+			<http:error-response >
+				<http:body ><![CDATA[#[output application/json --- error.errorType]]]></http:body>
+			</http:error-response>
+		</http:listener>
+		<set-variable value="#[attributes.queryParams.productname]" doc:name="Set Variable" doc:id="60edcb8f-d36c-468b-90cf-25a1cb6e4acb" variableName="productname"/>
+		<flow-ref doc:name="ValidateAndTransform" doc:id="ec1054d2-5bce-4ecf-bf53-bf8c3bb49f60" name="ValidateAndTransform"/>
+		<logger level="INFO" doc:name="Logger" doc:id="f52a19db-0726-4478-a10b-50bea1955787" message="#['in main flow After Getting all products']"/>
+	</flow>
+</mule>

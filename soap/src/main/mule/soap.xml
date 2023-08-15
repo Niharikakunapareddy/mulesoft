@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:wsc="http://www.mulesoft.org/schema/mule/wsc"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/wsc http://www.mulesoft.org/schema/mule/wsc/current/mule-wsc.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<wsc:config name="Web_Service_Consumer_Config" doc:name="Web Service Consumer Config" doc:id="1dd06ec1-80d3-4dce-a1f9-a47eb2981c4f" >
+		<wsc:connection wsdlLocation="products1.wsdl" service="ProductServicePortService" port="ProductServicePortSoap11" address="http://localhost:6060/ws" >
+			<wsc:web-service-security actor="http://schemas.xmlsoap.org/soap/actor/next" />
+		</wsc:connection>
+	</wsc:config>
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="51b42c95-8bce-4a68-b8e9-c2c61b29b449" basePath="/products" >
+		<http:listener-connection host="0.0.0.0" port="8087" />
+	</http:listener-config>
+	<http:listener-config name="HTTP_Listener_config1" doc:name="HTTP Listener config" doc:id="ef842bc8-525c-4b74-9938-7f00ab2dc18e" >
+		<http:listener-connection host="0.0.0.0" port="8088" />
+	</http:listener-config>
+	<http:listener-config name="HTTP_Listener_config2" doc:name="HTTP Listener config" doc:id="760684b5-7f99-4c12-b9ee-5a6595de37b0" >
+		<http:listener-connection host="0.0.0.0" port="8088" />
+	</http:listener-config>
+	<http:listener-config name="HTTP_Listener_config3" doc:name="HTTP Listener config" doc:id="3ca15886-2428-4ea4-bf36-d2e3902d7d02" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<flow name="mainflow" doc:id="ffe1038f-29b8-43c5-8766-c5e41a7082d2" >
+		<http:listener doc:name="Listener" doc:id="ad624ed3-11d6-4889-84a7-41840cb3afa7" config-ref="HTTP_Listener_config3" path="/products"/>
+		<flow-ref doc:name="getallproducts" doc:id="48b856c8-5e41-4140-b4ae-8bad7e603661" name="getallproducts"/>
+	</flow>
+	<flow name="getallproducts" doc:id="f5d32228-a245-4e6e-9daf-1322530bc74c" >
+		<wsc:consume doc:name="Consume" doc:id="c907ea31-a92d-44e5-8316-6e4ee44bb4a1" config-ref="Web_Service_Consumer_Config" operation="getAllProducts">
+			<wsc:message >
+				<wsc:body ><![CDATA[<dom:getAllProductsRequest/  xmlns:dom="http//way2learnonline.com/domain"/>]]></wsc:body>
+			</wsc:message>
+		</wsc:consume>
+	</flow>
+</mule>

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<http:request-config name="HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="f26f873c-33f9-4873-a1bd-8087c42833b7" basePath="/rest" >
+		<http:request-connection host="localhost" port="7070" />
+	</http:request-config>
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="df137615-5e09-4ab5-baf9-1a3b9f48e9a8" >
+		<http:listener-connection host="0.0.0.0" port="8085" />
+	</http:listener-config>
+	<flow name="mainflow" doc:id="be2937e8-be2a-43ee-8f89-38aa577ac268" >
+		<http:listener doc:name="Listener" doc:id="51042d6c-8132-45e5-b829-2ace8911c54b" config-ref="HTTP_Listener_config" path="/myproducts"/>
+		<flow-ref doc:name="getallproducts" doc:id="cfbf482c-950d-4273-944a-3513fe2fc592" name="getallproducts"/>
+	</flow>
+	<flow name="getallproducts" doc:id="2d229cf9-6925-4ba5-9593-272fe7c91e6c" >
+		<http:request method="GET" doc:name="Request" doc:id="0d7422e9-86ca-4f58-89fe-00b74b2f33a5" config-ref="HTTP_Request_configuration" path="/products"/>
+	</flow>
+</mule>

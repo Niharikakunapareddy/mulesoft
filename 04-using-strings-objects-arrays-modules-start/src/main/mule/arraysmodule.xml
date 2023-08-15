@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="arraysmoduleFlow1" doc:id="a93d4b0d-d259-45d2-aff3-58f9364c5311" >
+		<ee:transform doc:name="Transform Message" doc:id="9f9bcf40-b60c-4715-94e9-cbaf198e913b" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/dw
+import dw::core::Objects
+var address ={
+	
+	city:"Ongole",
+	country:"India"
+}
+
+var user ={
+	
+	firstname:"Niha",
+	lastname:"Bujji",
+	city:"Ongole"
+}
+
+---
+user ++ address
+//user Objects::mergeWith address
+
+//payload.products
+//payload.products pluck (V,K,I) -> V.brandName
+
+
+//Objects::entrySet(payload.products) map (entry) -> entry.value
+
+//Objects::keySet(payload.products) map (item) -> item.@
+//payload.products]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="arraysmoduleFlow" doc:id="bba42922-bc91-420e-a8c0-0fbae0b88456" >
+		<ee:transform doc:name="Transform Message" doc:id="130f0027-1a8b-4877-a0a7-d4bed6481c75" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/dw
+
+import dw::core::Arrays
+
+var products=payload.products.*product
+---
+
+flatten(products.originalPrice Arrays::divideBy(2)) 
+
+
+//products Arrays::sumBy 
+    //(item) -> if(item.brandName == "Apple") item.originalPrice else 0 
+
+ //Arrays::sumBy (item) -> item.originalPrice
+
+
+//payload.products.*product Arrays::every
+           //(item) -> item.originalPrice >=1000
+    //products Arrays::countBy 
+        //(item) -> item.originalPrice >1000]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+</mule>

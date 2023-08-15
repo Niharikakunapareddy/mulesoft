@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:munit="http://www.mulesoft.org/schema/mule/munit" xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+		http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+		http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd">
+	<munit:config name="munit-basic-test-suite.xml" />
+	<munit:before-test name="munit-basic-test-suiteBefore_Test" doc:id="334d069e-3dd2-4c71-9a38-649eab9465e9" >
+		<munit:set-event doc:name="Set Event" doc:id="889fa034-d5ce-4427-ab9f-28544f428cb1">
+			<munit:attributes value="#[{queryParams: {id:1}}]" />
+		</munit:set-event>
+	</munit:before-test>
+	<munit:test name="munit-basic-test-suite-mainflowTest" doc:id="d6aad4e1-6c27-4f66-971c-039733f2db97" description="Test">
+		<munit:execution >
+			<flow-ref doc:name="Flow-ref to mainflow" doc:id="cbff7fe3-459e-45e5-9efc-36b6e6a51be4" name="mainflow"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-equals doc:name="Assert equals" doc:id="48bc2917-c29f-40b9-96f3-1c792034468d" actual="#[payload.name]" expected="'Hp Pavilion lapt'" message="Name is not as expected"/>
+			<munit-tools:assert-that doc:name="Assert that" doc:id="c9e0a087-c551-4b43-9f5f-b22960f2d0bc" is="#[MunitTools::anyOf([MunitTools::notNullValue(),MunitTools::equalToIgnoringCase('Hp Pavilion laptop')])&#10;//MunitTools::not(MunitTools::equalTo('Apple'))]" expression="#[payload.name]"/>
+			<munit-tools:assert doc:name="Assert expression" doc:id="76f8ec32-39a0-4209-8b03-f7355a99e6c8" >
+				<munit-tools:that ><![CDATA[#[import * from dw::test::Asserts 
+ ---
+payload must equalTo('Hp Pavilion laptop')]]]></munit-tools:that>
+			</munit-tools:assert>
+		</munit:validation>
+	</munit:test>
+	<munit:test name="munit-basic-test-suite-mainflowTest1" doc:id="e0111ef5-ec14-40d0-8db3-cc02af296ada" description="Test">
+		<munit:execution >
+			<flow-ref doc:name="Select by Id" doc:id="f1579c54-85e6-4240-8d91-e906beeec0d9" name="mainflow" />
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:verify-call doc:name="Verify call" doc:id="c5a6a895-657e-42a5-9320-83d206e87ad8" processor="db:select" atLeast="1">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="Select" attributeName="doc:name" />
+				</munit-tools:with-attributes>
+			</munit-tools:verify-call>
+		</munit:validation>
+	</munit:test>
+
+
+</mule>

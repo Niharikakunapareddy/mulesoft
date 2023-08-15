@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="asynch" doc:id="268aa109-ec48-43ce-ae32-ce5991b93705" >
+		<http:listener doc:name="Listener" doc:id="9cdbec99-f5f8-406d-bd16-8ecec342bbc7" config-ref="HTTP_Listener_config" path="/addproductasync" />
+		<ee:transform doc:name="Create Product json" doc:id="aaf836a3-c0c7-4270-8d3a-18614887ee63" >
+			<ee:message />
+			<ee:variables >
+				<ee:set-variable resource="product.dwl" variableName="product" />
+			</ee:variables>
+		</ee:transform>
+		<async doc:name="Async" doc:id="00ea1b93-fe16-4493-a176-7c0973d57d14" >
+			<flow-ref doc:name="check-if-product-exists" doc:id="bc33db9e-e9f1-4115-a82f-c32119f2264a" name="check-if-product-exists" />
+			<flow-ref doc:name="upsertproduct" doc:id="8fe50778-ee93-4d61-88cb-afd35489dac6" name="upsertproduct" />
+		</async>
+		<async doc:name="Async" doc:id="c3518aab-025c-404d-af74-0502dba36eb6" >
+			<ee:transform doc:name="Transform Message" doc:id="2c03e16d-a8e1-4fdd-8a0d-f80c0398a71a" >
+				<ee:message >
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/xml
+ns ns0 http//way2learnonline.com/domain
+---
+{
+	ns0#addProductRequest: {
+		product: {
+			brandName: vars.product.brandName as String,
+			description: vars.product.description,
+			name: vars.product.name as String,
+			offer: {
+				offerPrice: vars.product.offerPrice as Number
+			},
+			originalPrice: vars.product.originalPrice as Number,
+			productId: vars.product.productid as Number
+		}
+	}
+}]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+			<flow-ref doc:name="soap-service-addproduct" doc:id="5ee6c732-9f4b-4f24-924b-1341ee1c2504" name="soap-service-addproduct" />
+		</async>
+		<set-payload value="#['product with id ' ++ vars.product.productid as String ++ ' is upserted']" doc:name="Set Payload" doc:id="0d2a5ac9-d374-4de8-97e0-5aa07da2d727" />
+	</flow>
+</mule>

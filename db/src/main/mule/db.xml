@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="e00c9c86-7f6d-433f-8750-78539153fdf4" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="13d6add4-7b96-4a82-9389-c3b4573a06d9" >
+		<db:my-sql-connection host="localhost" port="3306" user="root" password="niharika" database="muletrainingdb" />
+	</db:config>
+	<db:config name="Database_Config1" doc:name="Database Config" doc:id="8495dca9-ce58-4f0f-9666-efdca9f00ef5" >
+		<db:my-sql-connection host="localhost" port="3306" user="root" password="nihaika" database="muletrainingdb" />
+	</db:config>
+	<flow name="dbFlow" doc:id="4eea9fb1-3a84-405d-bd5e-bb1660c54486" >
+		<db:insert doc:name="Insert" doc:id="88694eba-39da-4d83-8f09-9dbc0ec876f6" config-ref="Database_Config">
+			<db:sql ><![CDATA[insert into product(brand_name, name, original_price)
+ values(:bname,:name,:oprice)]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	bname:'',
+	name:'',
+	oprice:1
+}]]]></db:input-parameters>
+		</db:insert>
+	</flow>
+	<flow name="getbyname" doc:id="4e7630f2-8dce-41f5-b6a5-5b70083a038e" >
+		<db:select doc:name="Select" doc:id="18a135d6-f973-4be1-a6c8-80efef3bb2ce" config-ref="Database_Config">
+			<db:sql ><![CDATA[select *from product where brand_name = :bname ]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	bname: vars.brand
+}]]]></db:input-parameters>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="9776364a-22df-4aef-a746-22686d5c5911">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="getallproducts" doc:id="82931962-d7e0-4769-9eb9-fcadc8de848f" >
+		<db:select doc:name="Select" doc:id="cfc1183d-4615-464e-9e5e-1b97c93ace87" config-ref="Database_Config">
+			<db:sql><![CDATA[select *from product]]></db:sql>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="bcce4f39-7416-47bb-8acf-dacd7228b1e9">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="2797d211-b4ed-469c-9794-a5060f3bf7bb" message="#[payload]" />
+	</flow>
+	<flow name="mainflow" doc:id="aaabb16a-08b9-4072-ae19-1c8ccbd4a7ff" >
+		<http:listener doc:name="Listener" doc:id="f589d549-94c1-4242-bf42-b1b67f80d10c" config-ref="HTTP_Listener_config" path="/products"/>
+		<set-variable value="#[attributes.queryParams.brandname]" doc:name="Set Variable" doc:id="c27e3a25-959b-4208-b8fa-a72dd0769f5c" variableName="brand"/>
+		<flow-ref doc:name="getbyname" doc:id="0165eaeb-7e4f-4a25-88de-12e6976ab917" name="getbyname" />
+	</flow>
+</mule>

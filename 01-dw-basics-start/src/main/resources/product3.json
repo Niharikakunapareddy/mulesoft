@@ -1,0 +1,16 @@
+{
+    "productId": 1,
+    "name": "Hp Pavilion laptop",
+    "description": "Hp Laptop ",
+    "originalPrice": 1000,
+    "offer": {
+      "discountPercentage": 25,
+      "offerValidUntil": "2019-06-29"
+    },
+    "brandName": "HP",
+    "images": [
+      "image1.jpeg",
+      "image2.jpeg",
+      "image3.jpeg"
+    ]
+  }

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<http:listener-config name="myhttplistenerconfig" doc:name="HTTP Listener config" doc:id="73fa926e-ea01-4f36-a0c3-a8826917f801" basePath="/y" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<flow name="javamoduleFlow" doc:id="5d90b955-c7f2-483b-9f64-d4ba60f5c55c" >
+		<http:listener doc:name="Listener" doc:id="4a7793c6-e2f7-4bff-a6d4-134c81faac50" config-ref="HTTP_Listener_config" path="/sayhello"/>
+		<set-variable value="#[{&#10;	name: attributes.queryParams as String,&#10;	city: attributes.queryParams as String&#10;}]" doc:name="Set Variable" doc:id="d9e00900-0651-4b24-8213-ec53abeaae2b" variableName="sayHello(String name,String citty)"/>
+		<set-variable value="#[{&#10;	name: attributes.queryParams as String,&#10;	city: attributes.queryParams as String&#10;}]" doc:name="Set Variable" doc:id="88acada0-982d-45f5-98b4-552aa59d461f" variableName="sayHello(String name,String city)"/>
+		<set-payload value="#[payload]" doc:name="Set Payload" doc:id="2f949ca4-6aaf-432e-9de0-b8a89c3165d9" />
+		<logger level="INFO" doc:name="Logger" doc:id="fcc4fcc6-82c5-45cd-8693-02747cf309bc" />
+	</flow>
+</mule>

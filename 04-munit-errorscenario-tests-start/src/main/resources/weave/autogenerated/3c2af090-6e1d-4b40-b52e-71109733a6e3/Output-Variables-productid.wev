@@ -1,0 +1,4 @@
+%dw 2.0
+
+type auto_3c2af090_6e1d_4b40_b52e_71109733a6e3_Output_Variables_productid = String | Null
+

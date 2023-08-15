@@ -1,0 +1,26 @@
+{
+  "configs": [
+    "one-way-sync-usingvms-batch-cluster.xml"
+  ],
+  "secureProperties": [],
+  "redeploymentEnabled": true,
+  "name": "com.mycompany:08-onewaysynch-using-vms-batch-cluster-solution:1.0.0-SNAPSHOT",
+  "minMuleVersion": "4.3.0",
+  "requiredProduct": "MULE_EE",
+  "classLoaderModelLoaderDescriptor": {
+    "id": "mule",
+    "attributes": {
+      "exportedPackages": [],
+      "exportedResources": [
+        "log4j2.xml",
+        "mule1.yaml",
+        "mule2.yaml",
+        "one-way-sync-usingvms-batch-cluster.xml"
+      ]
+    }
+  },
+  "bundleDescriptorLoader": {
+    "id": "mule",
+    "attributes": {}
+  }
+}

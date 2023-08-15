@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="joiningdatasetsFlow" doc:id="5e9b4482-604f-4942-b4d0-a9b2871ba85c" >
+		<ee:transform doc:name="Transform Message" doc:id="f9c3499a-7751-493c-8480-22a79c5d1d19" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/dw
+
+var citiesXml = readUrl("classpath://examples/cities.xml","application/xml")
+var statesXml = readUrl("classpath://examples/states.xml","application/xml")
+var states = statesXml.states pluck (V,K,I) -> K.@
+
+fun getstateDetailByName(stateName) = do{
+	var filteredStates = states filter (item) -> item.name == stateName
+	
+	var firstFilteredState = filteredStates[0]
+	---
+	firstFilteredState -- ['dst' ,'most-populous-city']
+}
+
+var joinedCities =
+       citiesXml.cities.*city map (item) ->{
+	state : sortObjectByKeys(getstateDetailByName(item.state_name)),
+	city : item.city_name
+	
+}
+
+
+    
+fun sortObjectByKeys(obj) = do{
+	var sortedKeys=(obj pluck (V,K,I) -> K) orderBy (item,index) -> item
+
+    var keyValueArray = sortedKeys map (key) -> (key):obj[key]
+	---
+	{
+	(keyValueArray)
+}
+	
+	
+}
+
+
+---
+joinedCities
+
+
+
+
+
+
+
+
+
+
+
+
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+</mule>

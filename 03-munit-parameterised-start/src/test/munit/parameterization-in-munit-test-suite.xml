@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:munit="http://www.mulesoft.org/schema/mule/munit" xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+		http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+		http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd">
+	<munit:config name="parameterization-in-munit-test-suite.xml" >
+		<munit:parameterizations >
+			<munit:parameterization name="brandapple" />
+			<munit:parameterization name="brandhp" />
+		</munit:parameterizations>
+		<munit:parameterizations >
+			<munit:parameterization name="brandapple" >
+				<munit:parameters >
+					<munit:parameter propertyName="brand" value="Apple" />
+					<munit:parameter propertyName="size" value="2" />
+				</munit:parameters>
+			</munit:parameterization>
+			<munit:parameterization name="brandhp" />
+		</munit:parameterizations>
+		<munit:parameterizations >
+			<munit:parameterization name="brandapple" >
+				<munit:parameters >
+					<munit:parameter propertyName="brand" value="Apple" />
+					<munit:parameter propertyName="size" value="2" />
+				</munit:parameters>
+			</munit:parameterization>
+			<munit:parameterization name="brandhp" >
+				<munit:parameters >
+					<munit:parameter propertyName="brand" value="HP" />
+					<munit:parameter propertyName="size" value="1" />
+				</munit:parameters>
+			</munit:parameterization>
+		</munit:parameterizations>
+		<munit:parameterizations >
+			<munit:parameterization name="brandapple" >
+				<munit:parameters >
+					<munit:parameter propertyName="brand" value="Apple" />
+					<munit:parameter propertyName="size" value="2" />
+				</munit:parameters>
+			</munit:parameterization>
+			<munit:parameterization name="brandhp" >
+				<munit:parameters >
+					<munit:parameter propertyName="brand" value="HP" />
+					<munit:parameter propertyName="size" value="1" />
+				</munit:parameters>
+			</munit:parameterization>
+		</munit:parameterizations>
+		<munit:parameterizations >
+			<munit:parameterization name="brandapple" >
+				<munit:parameters >
+					<munit:parameter propertyName="brand" value="Apple" />
+					<munit:parameter propertyName="size" value="2" />
+				</munit:parameters>
+			</munit:parameterization>
+			<munit:parameterization name="brandhp" >
+				<munit:parameters >
+					<munit:parameter propertyName="brand" value="HP" />
+					<munit:parameter propertyName="size" value="1" />
+				</munit:parameters>
+			</munit:parameterization>
+		</munit:parameterizations>
+		<munit:parameterizations >
+			<munit:parameterization name="brandapple" >
+				<munit:parameters >
+					<munit:parameter propertyName="brand" value="Apple" />
+					<munit:parameter propertyName="size" value="2" />
+				</munit:parameters>
+			</munit:parameterization>
+			<munit:parameterization name="brandhp" >
+				<munit:parameters >
+					<munit:parameter propertyName="brand" value="HP" />
+					<munit:parameter propertyName="size" value="1" />
+				</munit:parameters>
+			</munit:parameterization>
+		</munit:parameterizations>
+		
+	</munit:config>
+	<munit:test name="parameterization-in-munit-test-suite-mainflowTest" doc:id="87c2c4e3-7a1b-45e1-ab48-8661cfcb41fe" description="Test">
+		<munit:execution >
+			<munit:set-event doc:name="Set Event" doc:id="93406cde-86d7-4b44-b84f-70452793d3cf">
+				<munit:attributes value="#[{queryParams:{brand: Mule::p('brand')}}]" />
+			</munit:set-event>
+			<flow-ref doc:name="Flow-ref to mainflow" doc:id="42d6ec5f-a60d-48e7-a3c2-a40aabb24560" name="mainflow"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert doc:name="Assert expression" doc:id="e0911fd9-9606-4448-b8dc-c256163b2534" >
+				<munit-tools:that ><![CDATA[#[import * from dw::test::Asserts  
+ ---
+payload must haveSize(Mule::p('size') as Number)]]]></munit-tools:that>
+			</munit-tools:assert>
+		</munit:validation>
+	</munit:test>
+
+
+</mule>

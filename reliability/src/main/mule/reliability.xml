@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="0f675d06-bcb0-47a8-ad58-9b36f72c78be" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="77646c75-bbaf-4e4e-9da6-572224e4391a" >
+		<db:my-sql-connection host="localhost" port="3306" user="root" password="niharika" database="muletrainingdb" >
+			<reconnection failsDeployment="true" >
+				<reconnect />
+			</reconnection>
+		</db:my-sql-connection>
+	</db:config>
+	<flow name="myreliabilityFlow" doc:id="e999b34b-8dfb-4723-ba49-2bb03b7d2edd" >
+		<http:listener doc:name="Listener" doc:id="90da734e-6002-432e-b1de-80c41f84735f" config-ref="HTTP_Listener_config" path="/test"/>
+		<until-successful maxRetries="3" doc:name="Until Successful" doc:id="d39cf545-195d-4951-bca8-24fb8f4b090f" millisBetweenRetries="5000">
+			<db:select doc:name="Select" doc:id="65d802d0-64a1-497d-a714-22c79331da33" config-ref="Database_Config">
+			<db:sql><![CDATA[select * from product]]></db:sql>
+		</db:select>
+		</until-successful>
+		<ee:transform doc:name="Transform Message" doc:id="9b8656a1-b3d9-4c91-9b91-991eec4f1879" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+</mule>
